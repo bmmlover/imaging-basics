@@ -10,7 +10,7 @@ namespace ImageReadCS
 	{
 		static void Main( string[] args )
 		{
-			string path = Directory.GetCurrentDirectory();
+			//string path = Directory.GetCurrentDirectory();
 
 			if ( args.Length < 2 )
 			{
@@ -18,9 +18,9 @@ namespace ImageReadCS
 				return;
 			}
 
-			string inputFileName = String.Concat( new List<string>() { "", args[ 0 ], ".bmp" } );
+			string inputFileName = String.Concat( new List<string>() { "input//", args[ 0 ], ".bmp" } );
 			string outputFileName = String.Empty;
-			List<string> outputName = new List<string>() { "", "", "", "", ".bmp" };
+			List<string> outputName = new List<string>() { "output//", "", "", "", ".bmp" };
 
 			if ( !File.Exists( inputFileName ) )
 			{
