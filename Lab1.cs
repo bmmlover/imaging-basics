@@ -77,10 +77,10 @@ namespace ImageReadCS
 					return dest;
 
 				case 180:
-					dest = new ColorFloatImage( source.Width,   source.Height );
+					dest = new ColorFloatImage( source.Width, source.Height );
 					for ( int y = 0; y < source.Height; y++ )
 						for ( int x = 0; x < source.Width; x++ )
-							dest[ x, y ] = source[ source.Width - 1  - x, source.Height - y - 1 ];
+							dest[ x, y ] = source[ source.Width - 1 - x, source.Height - y - 1 ];
 					return dest;
 
 				case 90:
@@ -215,18 +215,18 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		static float Convolve( List<int> coef, List<ColorFloatPixel> pix )
+		static ColorFloatPixel Convolve( List<int> coef, List<ColorFloatPixel> pix )
 		{
 			float red = 0, green = 0, blue = 0;
 
-			for ( int i = 0; i < 9; i++ )
+			for ( int i = 0; i < pix.Count; i++ )
 			{
 				red += coef[ i ] * pix[ i ].r;
 				green += coef[ i ] * pix[ i ].g;
 				blue += coef[ i ] * pix[ i ].b;
 			}
 
-			return (float) Math.Pow( ( red * 0.299 + green * 0.587 + blue * 0.114 ), 2 );
+			return new ColorFloatPixel( blue, green, red, pix[ 0 ].a );
 		}
 
 
@@ -307,49 +307,71 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		public static GrayscaleFloatImage SobelMagnitude( ColorFloatImage image )
+		static GrayscaleFloatImage RGB2Gray( ColorFloatImage image )
 		{
-			GrayscaleFloatImage dest = new GrayscaleFloatImage( image.Width, image.Height );
-			List<int> a_x = new List<int>() { -1, 0, 1,
-															 -2, 2,
-															 -1, 0, 1 };
-
-			List<int> a_y = new List<int>() { -1, -2, -1,
-															  0, 0,
-															  1, 2, 1 };
-
-			int border_x0, border_y0, border_xn, border_yn;
+			GrayscaleFloatImage gray = new GrayscaleFloatImage( image.Width, image.Height );
 
 			for ( int y = 0; y < image.Height; y++ )
 				for ( int x = 0; x < image.Width; x++ )
 				{
-					border_x0 = 0;
-					border_y0 = 0;
-					border_xn = 0;
-					border_yn = 0;
+					gray[ x, y ] = RGB2GrayPix( image[ x, y ] );
+				}
+			return gray;
+		}
 
-					if ( x - 1 < 0 )
-						border_x0 = 1;
-					if ( y - 1 < 0 )
-						border_y0 = 1;
-					if ( x + 1 > image.Width - 1 )
-						border_xn = 1;
-					if ( y + 1 > image.Height - 1 )
-						border_yn = 1;
+		static float RGB2GrayPix( ColorFloatPixel p )
+		{
+			return (float) ( p.r * 0.299 + p.g * 0.587 + p.b * 0.114 );
+		}
 
+		public static readonly List<int> sobelWindowX = new List<int>() { -1, 0, 1,
+															 -2, 0, 2,
+															 -1, 0, 1 };
+
+		public static readonly List<int> sobelWindowY = new List<int>() { -1, -2, -1,
+															  0, 0, 0,
+															  1, 2, 1 };
+
+		static List<int> NeighbourIndexes( int value, int max )
+		{
+			if ( value > 0 && value < max )
+			{
+				return new List<int>() { value - 1, value, value + 1 };
+			}
+			if ( value <= 0 )
+			{
+				return new List<int>() { 0, 0, 1 };
+			}
+			if ( value >= max )
+			{
+				return new List<int>() { max - 1, max, max };
+			}
+			return new List<int>();
+		}
+
+		public static GrayscaleFloatImage GradientMagnitude( ColorFloatImage image, List<int> xWindow, List<int> yWindow )
+		{
+			GrayscaleFloatImage dest = new GrayscaleFloatImage( image.Width, image.Height );
+
+			int windowSide = 3;
+
+			if ( xWindow.Count == 4 )
+				windowSide = 2;
+
+			for ( int y = 0; y < image.Height; y++ )
+				for ( int x = 0; x < image.Width; x++ )
+				{
+					List<int> i = NeighbourIndexes( x, image.Width - 1 );
+					List<int> j = NeighbourIndexes( y, image.Height - 1 );
 					List<ColorFloatPixel> pix = new List<ColorFloatPixel>();
 
-					pix.Add( image[ x - 1 + border_x0, y - 1 + border_y0 ] );
-					pix.Add( image[ x, y - 1 + border_y0 ] );
-					pix.Add( image[ x + 1 - border_xn, y - 1 + border_y0 ] );
-					pix.Add( image[ x - 1 + border_x0, y ] );
-					pix.Add( image[ x, y ] );
-					pix.Add( image[ x + 1 - border_xn, y ] );
-					pix.Add( image[ x - 1 + border_x0, y + 1 - border_yn ] );
-					pix.Add( image[ x, y + 1 - border_yn ] );
-					pix.Add( image[ x + 1 - border_xn, y + 1 - border_yn ] );
+					for ( int k = 0; k < windowSide; k++ )
+						for ( int n = 0; n < windowSide; n++ )
+							pix.Add( image[ i[ n ], j[ k ] ] );
 
-					dest[ x, y ] = (float) Math.Sqrt( Convolve( a_x, pix ) + Convolve( a_y, pix ) );
+					dest[ x, y ] = (float) Math.Sqrt(
+						Math.Pow( RGB2GrayPix( Convolve( xWindow, pix ) ), 2 ) +
+						Math.Pow( RGB2GrayPix( Convolve( yWindow, pix ) ), 2 ) );
 				}
 			return dest;
 		}
