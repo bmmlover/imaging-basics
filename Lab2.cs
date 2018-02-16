@@ -5,23 +5,6 @@ namespace ImageReadCS
 {
     public static class Lab2
     {
-        static GrayscaleFloatImage RgbToGray(ColorFloatImage image)
-        {
-            GrayscaleFloatImage gray = new GrayscaleFloatImage(image.Width, image.Height);
-
-            for (int y = 0; y < image.Height; y++)
-                for (int x = 0; x < image.Width; x++)
-                {
-                    gray[x, y] = (float)(image[x, y].r * 0.299 + image[x, y].g * 0.587 + image[x, y].b * 0.114);
-                }
-            return gray;
-        }
-
-        static float ColorPixelToGray(ColorFloatPixel p)
-        {
-            return (float)(p.r * 0.299 + p.g * 0.587 + p.b * 0.114);
-        }
-
         public static double MSE(ColorFloatImage i1, ColorFloatImage i2)
         {
             if (i1.Height != i2.Height || i1.Width != i2.Width)
@@ -32,7 +15,7 @@ namespace ImageReadCS
             for (int y = 0; y < i1.Height; y++)
                 for (int x = 0; x < i1.Width; x++)
                 {
-                    mse += Math.Pow(ColorPixelToGray(i1[x, y]) - ColorPixelToGray(i2[x, y]), 2);
+                    mse += Math.Pow(RGB2GrayPix(i1[x, y]) - RGB2GrayPix(i2[x, y]), 2);
                 }
 
             return mse / (i1.Width * i1.Height * 3);
@@ -70,7 +53,7 @@ namespace ImageReadCS
 
         public static double Canny(ColorFloatImage i1, float sigma)
         {
-            GrayscaleFloatImage gray = RgbToGray(i1);
+            GrayscaleFloatImage gray = RGB2Gray(i1);
 
 
             return 0;
