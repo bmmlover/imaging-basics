@@ -63,105 +63,77 @@ namespace ImageReadCS
 		{
 			ColorFloatImage dest;
 
+			angle = angle % 360;
+
 			switch ( angle )
 			{
+				case 0:
+					return source;
 				case 270:
 					dest = new ColorFloatImage( source.Height, source.Width );
 					for ( int y = 0; y < source.Height; y++ )
 						for ( int x = 0; x < source.Width; x++ )
-							dest[ y, source.Width - 1 - x ] = source[ x, y ];
+							dest[ x, y ] = source[ source.Width - 1 - y, x ];
 					return dest;
 
 				case 180:
-					dest = new ColorFloatImage( source.Width, source.Height );
+					dest = new ColorFloatImage( source.Width,   source.Height );
 					for ( int y = 0; y < source.Height; y++ )
 						for ( int x = 0; x < source.Width; x++ )
-							dest[ x, y ] = source[ source.Width - x - 1, source.Height - y - 1 ];
+							dest[ x, y ] = source[ source.Width - 1  - x, source.Height - y - 1 ];
 					return dest;
 
 				case 90:
 					dest = new ColorFloatImage( source.Height, source.Width );
 					for ( int y = 0; y < source.Height; y++ )
 						for ( int x = 0; x < source.Width; x++ )
-							dest[ source.Height - 1 - y, x ] = source[ x, y ];
+							dest[ x, y ] = source[ y, source.Height - 1 - x ];
 					return dest;
 			}
 
 			double rad = ConvertToRadians( angle );
 
-			int destWidth = 0, destHeight = 0;
-
-			if ( rad <= Math.PI / 2 )
-			{
-				destWidth = (int) Math.Ceiling( Math.Abs( source.Width * Math.Cos( rad ) ) + Math.Abs( source.Height * Math.Sin( rad ) ) );
-				destHeight = (int) Math.Ceiling( Math.Abs( source.Width * Math.Sin( rad ) ) + Math.Abs( source.Height * Math.Cos( rad ) ) );
-			}
-			else
-			{
-				var theta = rad - Math.PI / 2;
-				destWidth = (int) Math.Ceiling( Math.Abs( source.Height * Math.Cos( theta ) ) + Math.Abs( source.Width * Math.Sin( theta ) ) );
-				destHeight = (int) Math.Ceiling( Math.Abs( source.Height * Math.Sin( theta ) ) + Math.Abs( source.Width * Math.Cos( theta ) ) );
-			}
+			int destWidth = (int) Math.Ceiling( Math.Abs( source.Width * Math.Cos( rad ) ) + Math.Abs( source.Height * Math.Sin( rad ) ) );
+			int destHeight = (int) Math.Ceiling( Math.Abs( source.Width * Math.Sin( rad ) ) + Math.Abs( source.Height * Math.Cos( rad ) ) );
 
 			dest = new ColorFloatImage( destHeight, destWidth );
 
-			//dest = new ColorFloatImage( source.Height, source.Width );
+			int sourCenterX = source.Width / 2, sourCenterY = source.Height / 2;
+			int destCenterX = destWidth / 2, destCenterY = destHeight / 2;
 
-			int oldCenterX = source.Width / 2, oldCenterY = source.Height / 2;
-			//int newCenterX = destWidth / 2, newCenterY = destHeight / 2;
-
-			for ( int ySour = 0; ySour < source.Height; ySour++ )
-				for ( int xSour = 0; xSour < source.Width; xSour++ )
+			for ( int yDest = 0; yDest < destHeight; yDest++ )
+				for ( int xDest = 0; xDest < destWidth; xDest++ )
 				{
-					int xCenter = xSour - oldCenterX;
-					int yCenter = oldCenterY - ySour;
+					int xCenter = xDest - destCenterX;
+					int yCenter = destCenterY - yDest;
 
 					double ro = Math.Sqrt( xCenter * xCenter + yCenter * yCenter );
 					double phi = 0;
-					double xDest = 0, yDest = 0;
 
 					if ( xCenter != 0 )
-					{
 						phi = Math.Atan2( yCenter, xCenter );
-					}
 					else
-					{
-						if ( yCenter == 0 )
-						{
-							//dest[ (int) xDest, (int) yDest ] = source[ xSource, ySource ];
-							//continue;
-						}
-
 						phi = yCenter > 0 ? 0.5 * Math.PI : 1.5 * Math.PI;
-					}
 
-					phi -= rad;
+					phi += rad;
 
-					xDest = Math.Round( ro * Math.Cos( phi ) );
-					yDest = Math.Round( ro * Math.Sin( phi ) );
+					double xSource = Math.Round( ro * Math.Cos( phi ) ) + sourCenterX;
+					double ySource = sourCenterY - Math.Round( ro * Math.Sin( phi ) );
 
-					//xDest = xDest + newCenterX;
-					//yDest = newCenterY - yDest;
-
-					xDest = xDest + oldCenterX;
-					yDest = oldCenterY - yDest;
-
-					if ( xDest < 0 || xDest >= source.Width || yDest < 0 || yDest >= source.Height )
+					if ( xSource < 0 || xSource >= source.Width || ySource < 0 || ySource >= source.Height )
 						continue;
 
-					var destLeft = (int) ( Math.Floor( xDest ) );
-					var destTop = (int) ( Math.Floor( yDest ) );
-					var destRight = (int) ( Math.Ceiling( xDest ) );
-					var destBottom = (int) ( Math.Ceiling( yDest ) );
+					var sLeft = (int) ( Math.Floor( xSource ) );
+					var sTop = (int) ( Math.Floor( ySource ) );
+					var sRight = (int) ( Math.Ceiling( xSource ) );
+					var sBottom = (int) ( Math.Ceiling( ySource ) );
 
-					var dx = xDest - destLeft;
-					var dy = yDest - destTop;
+					var topPixel = InterpolateBilinear( source[ sLeft, sTop ],
+						source[ sRight, sTop ], xSource - sLeft );
+					var bottomPixel = InterpolateBilinear( source[ sLeft, sBottom ],
+						source[ sRight, sBottom ], xSource - sLeft );
 
-					var topPixel = InterpolateBilinear( source[ destLeft, destTop ], source[ destRight, destTop ], dx );
-					var bottomPixel = InterpolateBilinear( source[ destLeft, destBottom ], source[ destRight, destBottom ], dx );
-					var newPixel = InterpolateBilinear( topPixel, bottomPixel, dy );
-
-					dest[ xSour, ySour ] = newPixel;
+					dest[ xDest, yDest ] = InterpolateBilinear( topPixel, bottomPixel, ySource - sTop );
 				}
 			return dest;
 		}

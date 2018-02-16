@@ -19,7 +19,8 @@ namespace ImageReadCS
 
 			string[] fileEntries = Directory.GetFiles( Directory.GetCurrentDirectory() );
 			string inputFileName = "input//mandarin.bmp";
-			string outputFileName = "output//rotated_mandarin.bmp";
+			List<string> outputFileName = new List<string>() { "mandarin_", "", ".bmp" };
+			List<int> angles = new List<int>() { 0, 90, 180, 270, 45, 135, 225, 315, 360, 405, -45 };
 
 			if ( !File.Exists( inputFileName ) )
 			{
@@ -27,11 +28,13 @@ namespace ImageReadCS
 				return;
 			}
 
-			ColorFloatImage image = ImageIO.FileToColorFloatImage( inputFileName );
-
-			image = RotateCW( image, 25 );
-
-			ImageIO.ImageToFile( image, outputFileName );
+			foreach (var angle in angles )
+			{
+				ColorFloatImage image = ImageIO.FileToColorFloatImage( inputFileName );
+				image = RotateCW( image, angle );
+				outputFileName[ 1 ] = angle.ToString();
+				ImageIO.ImageToFile( image, String.Concat( outputFileName ) );
+			}
 		}
 	}
 }
