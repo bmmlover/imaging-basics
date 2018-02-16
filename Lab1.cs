@@ -103,18 +103,18 @@ namespace ImageReadCS
 				destHeight = (int) Math.Ceiling( Math.Abs( source.Height * Math.Sin( theta ) ) + Math.Abs( source.Width * Math.Cos( theta ) ) );
 			}
 
-			//dest = new ColorFloatImage( destHeight, destWidth );
+			dest = new ColorFloatImage( destHeight, destWidth );
 
-			dest = new ColorFloatImage( source.Height, source.Width );
+			//dest = new ColorFloatImage( source.Height, source.Width );
 
 			int oldCenterX = source.Width / 2, oldCenterY = source.Height / 2;
 			//int newCenterX = destWidth / 2, newCenterY = destHeight / 2;
 
-			for ( int ySource = 0; ySource < source.Height; ySource++ )
-				for ( int xSource = 0; xSource < source.Width; xSource++ )
+			for ( int ySour = 0; ySour < source.Height; ySour++ )
+				for ( int xSour = 0; xSour < source.Width; xSour++ )
 				{
-					int xCenter = xSource - oldCenterX;
-					int yCenter = oldCenterY - ySource;
+					int xCenter = xSour - oldCenterX;
+					int yCenter = oldCenterY - ySour;
 
 					double ro = Math.Sqrt( xCenter * xCenter + yCenter * yCenter );
 					double phi = 0;
@@ -129,7 +129,7 @@ namespace ImageReadCS
 						if ( yCenter == 0 )
 						{
 							//dest[ (int) xDest, (int) yDest ] = source[ xSource, ySource ];
-							continue;
+							//continue;
 						}
 
 						phi = yCenter > 0 ? 0.5 * Math.PI : 1.5 * Math.PI;
@@ -146,7 +146,7 @@ namespace ImageReadCS
 					xDest = xDest + oldCenterX;
 					yDest = oldCenterY - yDest;
 
-					if ( xDest < 0 || xDest > source.Width || yDest < 0 || yDest > source.Height )
+					if ( xDest < 0 || xDest >= source.Width || yDest < 0 || yDest >= source.Height )
 						continue;
 
 					var destLeft = (int) ( Math.Floor( xDest ) );
@@ -157,16 +157,11 @@ namespace ImageReadCS
 					var dx = xDest - destLeft;
 					var dy = yDest - destTop;
 
-					if (destRight == 512 )
-					{
-
-					}
-
 					var topPixel = InterpolateBilinear( source[ destLeft, destTop ], source[ destRight, destTop ], dx );
 					var bottomPixel = InterpolateBilinear( source[ destLeft, destBottom ], source[ destRight, destBottom ], dx );
 					var newPixel = InterpolateBilinear( topPixel, bottomPixel, dy );
 
-					dest[ (int)Math.Round(xDest), (int)Math.Round(yDest) ] = newPixel;
+					dest[ xSour, ySour ] = newPixel;
 				}
 			return dest;
 		}
