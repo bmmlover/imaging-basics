@@ -9,8 +9,8 @@ namespace ImageReadCS
         public byte b, g, r, a;
     }
 
-    public class ColorByteImage
-    {
+    public class ColorByteImage : ICustomImage
+	{
         public int Width { get; private set; }
         public int Height { get; private set; }
         public readonly ColorBytePixel[] rawdata;

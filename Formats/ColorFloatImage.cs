@@ -16,8 +16,8 @@ namespace ImageReadCS
         }
     }
 
-    public class ColorFloatImage
-    {
+    public class ColorFloatImage : ICustomImage
+	{
         public int Width { get; private set; }
         public int Height { get; private set; }
         public readonly ColorFloatPixel[] rawdata;

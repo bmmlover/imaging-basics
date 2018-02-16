@@ -2,8 +2,8 @@
 
 namespace ImageReadCS
 {
-    public class GrayscaleByteImage
-    {
+    public class GrayscaleByteImage : ICustomImage
+	{
         public int Width { get; private set; }
         public int Height { get; private set; }
         public readonly byte[] rawdata;
