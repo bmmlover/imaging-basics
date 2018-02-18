@@ -51,43 +51,18 @@ namespace ImageReadCS
 		}
 
 		[Test]
-		public void Test()
+		public void TestGradient()
 		{
-			var dir = Path.GetDirectoryName( typeof( Program ).Assembly.Location );
-			Environment.CurrentDirectory = dir;
+			SetDir();
 
-			string[] fileEntries = Directory.GetFiles( Directory.GetCurrentDirectory() );
-			string inputFileName = "input//mandarin.bmp";
-			List<string> outputFileName = new List<string>() { "mandarin_", "", ".bmp" };
 			List<int> angles = new List<int>() { 0, 90, 180, 270, 45, 135, 225, 315, 360, 405, -45 };
 
-			if ( !File.Exists( inputFileName ) )
+			foreach ( var angle in angles )
 			{
-				Console.WriteLine( "File doesn't exist" );
-				return;
+				ColorFloatImage image = ReadImage();
+				image = RotateCW( image, angle );
+				SaveImage( image, angle.ToString() );
 			}
-
-					[Test]
-		public void TestRotation()
-		{
-			var dir = Path.GetDirectoryName( typeof( Program ).Assembly.Location );
-			Environment.CurrentDirectory = dir;
-
-			string[] fileEntries = Directory.GetFiles( Directory.GetCurrentDirectory() );
-			string inputFileName = "input//mandarin.bmp";
-			List<string> outputFileName = new List<string>() { "mandarin_", "", ".bmp" };
-			List<int> angles = new List<int>() { 0, 90, 180, 270, 45, 135, 225, 315, 360, 405, -45 };
-
-			if ( !File.Exists( inputFileName ) )
-			{
-				Console.WriteLine( "File doesn't exist" );
-				return;
-			}
-
-			ColorFloatImage image = ImageIO.FileToColorFloatImage( inputFileName );
-			image = RotateCW( image, angle );
-			outputFileName[ 1 ] = angle.ToString();
-			ImageIO.ImageToFile( image, String.Concat( outputFileName ) );
 		}
 	}
 }

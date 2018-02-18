@@ -475,21 +475,6 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		public static double[,] Calculate2DLoGSampleKernel( double deviation, int size )
-		{
-			double[,] ret = new double[ size, size ];
-			int half = size / 2;
-			for ( int i = 0; i < size; i++ )
-			{
-				for ( int j = 0; j < size; j++ )
-				{
-					double r = Math.Sqrt( ( i - half ) * ( i - half ) + ( j - half ) * ( j - half ) );
-					ret[ i, j ] = ( ( r * r - 2 * deviation * deviation ) / Math.Pow( deviation, 4 ) ) * Math.Exp( -r * r / ( 2 * deviation * deviation ) );
-				}
-			}
-			return ret;
-		}
-
 		public static ColorFloatImage GaussMagnitude( ColorFloatImage image, float sigma )
 		{
 			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
@@ -546,6 +531,8 @@ namespace ImageReadCS
 				}
 			return dest;
 		}
+
+		public 
 
 
 		public static ColorFloatImage Gauss( ColorFloatImage image, float sigma )
