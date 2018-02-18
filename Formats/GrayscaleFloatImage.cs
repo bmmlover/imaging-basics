@@ -2,8 +2,8 @@
 
 namespace ImageReadCS
 {
-    public class GrayscaleFloatImage
-    {
+    public class GrayscaleFloatImage: ICustomImage
+	{
         public int Width { get; private set; }
         public int Height { get; private set; }
         public readonly float[] rawdata;

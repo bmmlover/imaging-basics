@@ -60,6 +60,7 @@
     <Compile Include="Formats\ColorFloatImage.cs" />
     <Compile Include="Formats\GrayscaleByteImage.cs" />
     <Compile Include="Formats\GrayscaleFloatImage.cs" />
+    <Compile Include="Formats\ICustomImage.cs" />
     <Compile Include="IO\DIB.cs" />
     <Compile Include="IO\ImageIO.cs" />
     <Compile Include="Program.cs" />

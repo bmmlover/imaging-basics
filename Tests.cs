@@ -54,15 +54,9 @@ namespace ImageReadCS
 		public void TestGradient()
 		{
 			SetDir();
-
-			List<int> angles = new List<int>() { 0, 90, 180, 270, 45, 135, 225, 315, 360, 405, -45 };
-
-			foreach ( var angle in angles )
-			{
-				ColorFloatImage image = ReadImage();
-				image = RotateCW( image, angle );
-				SaveImage( image, angle.ToString() );
-			}
+			ColorFloatImage image = ReadImage();
+			image = Gauss( image, 3);
+			SaveImage( image, "gauss" );
 		}
 	}
 }

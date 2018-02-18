@@ -9,6 +9,12 @@ namespace ImageReadCS
         public float Sum { get; set; }
     }
 
+	enum FillMode
+	{
+		Constant=1,
+		Reflection=2
+	}
+
 	public static class Lab1
 	{
 		public static ColorFloatImage InvertImage( ColorFloatImage image ) //ok
@@ -313,7 +319,7 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		static GrayscaleFloatImage RGB2Gray( ColorFloatImage image )
+		public static GrayscaleFloatImage RGB2Gray( ColorFloatImage image )
 		{
 			GrayscaleFloatImage gray = new GrayscaleFloatImage( image.Width, image.Height );
 
@@ -325,7 +331,7 @@ namespace ImageReadCS
 			return gray;
 		}
 
-		static float RGB2GrayPix( ColorFloatPixel p )
+		public static float RGB2GrayPix( ColorFloatPixel p )
 		{
 			return (float) ( p.r * 0.299 + p.g * 0.587 + p.b * 0.114 );
 		}
@@ -338,8 +344,12 @@ namespace ImageReadCS
 															  0, 0, 0,
 															  1, 2, 1 };
 
-		static List<int> NeighbourIndexes( int value, int max )
+		static List<int> NeighbourIndexes( int value, int max, int halfWindow, FillMode mode )
 		{
+			if (mode == FillMode.Constant )
+			{
+
+			}
 			if ( value > 0 && value < max )
 			{
 				return new List<int>() { value - 1, value, value + 1 };
@@ -355,11 +365,11 @@ namespace ImageReadCS
 			return new List<int>();
 		}
 
-		public static GrayscaleFloatImage GradientMagnitude( ColorFloatImage image, List<float> xWindow, List<float> yWindow )
+		public static GrayscaleFloatImage GradientMagnitude( ColorFloatImage image, float[] xWindow, float[] yWindow )
 		{
 			GrayscaleFloatImage dest = new GrayscaleFloatImage( image.Width, image.Height );
 
-            int windowSide = (int) Math.Pow(xWindow.Count, 0.5);
+            int windowSide = (int) Math.Pow(xWindow.Length, 0.5);
 
 			for ( int y = 0; y < image.Height; y++ )
 				for ( int x = 0; x < image.Width; x++ )
