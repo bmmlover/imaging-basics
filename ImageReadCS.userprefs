@@ -1,0 +1,15 @@
+﻿<Properties StartupConfiguration="{E62DF5A6-F9C3-4C88-BEE1-38F0125662EB}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Formats/ColorFloatImage.cs">
+    <Files>
+      <File FileName="Lab1.cs" Line="25" Column="24" />
+      <File FileName="Formats/ColorFloatImage.cs" Line="48" Column="39" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.ImageReadCS PreferredExecutionTarget="MonoDevelop.Default" />
+  <MultiItemStartupConfigurations />
+</Properties>

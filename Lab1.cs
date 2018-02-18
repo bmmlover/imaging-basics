@@ -3,9 +3,15 @@ using System.Collections.Generic;
 
 namespace ImageReadCS
 {
+    public class ConvolutionKernel
+    {
+        public float[] Kernel { get; set; }
+        public float Sum { get; set; }
+    }
+
 	public static class Lab1
 	{
-		public static ColorFloatImage InvertImage( ColorFloatImage image )
+		public static ColorFloatImage InvertImage( ColorFloatImage image ) //ok
 		{
 			for ( int y = 0; y < image.Height; y++ )
 				for ( int x = 0; x < image.Width; x++ )
@@ -16,7 +22,7 @@ namespace ImageReadCS
 			return image;
 		}
 
-		public static ColorFloatImage MirrorX( ColorFloatImage image )
+		public static ColorFloatImage MirrorX( ColorFloatImage image ) //ok
 		{
 			for ( int y = 0; y < image.Height; y++ )
 				for ( int x = 0; x < image.Width / 2; x++ )
@@ -28,7 +34,7 @@ namespace ImageReadCS
 			return image;
 		}
 
-		public static ColorFloatImage MirrorY( ColorFloatImage image )
+		public static ColorFloatImage MirrorY( ColorFloatImage image ) //ok
 		{
 			for ( int y = 0; y < image.Height / 2; y++ )
 				for ( int x = 0; x < image.Width; x++ )
@@ -59,7 +65,7 @@ namespace ImageReadCS
 															 p1.a );
 		}
 
-		public static ColorFloatImage RotateCW( ColorFloatImage source, int angle )
+		public static ColorFloatImage RotateCW( ColorFloatImage source, int angle ) //ok
 		{
 			ColorFloatImage dest;
 
@@ -138,7 +144,7 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		public static ColorFloatImage Prewitt( ColorFloatImage image, string arg )
+		public static ColorFloatImage Prewitt( ColorFloatImage image, string arg ) //todo rewrite
 		{
 			int axes = 0;
 			if ( arg == "y" )
@@ -215,22 +221,22 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		static ColorFloatPixel Convolve( List<int> coef, List<ColorFloatPixel> pix )
+		static ColorFloatPixel Convolve( float[] coef, List<ColorFloatPixel> pix, float divider )
 		{
 			float red = 0, green = 0, blue = 0;
 
 			for ( int i = 0; i < pix.Count; i++ )
 			{
-				red += coef[ i ] * pix[ i ].r;
-				green += coef[ i ] * pix[ i ].g;
-				blue += coef[ i ] * pix[ i ].b;
+                red += coef[ i ] * pix[ i ].r / divider;
+                green += coef[ i ] * pix[ i ].g / divider;
+                blue += coef[ i ] * pix[ i ].b / divider;
 			}
 
 			return new ColorFloatPixel( blue, green, red, pix[ 0 ].a );
 		}
 
 
-		public static ColorFloatImage Sobel( ColorFloatImage image, string arg )
+		public static ColorFloatImage Sobel( ColorFloatImage image, string arg ) //todo rewrite
 		{
 			int axes = 0;
 			if ( arg == "y" )
@@ -349,14 +355,11 @@ namespace ImageReadCS
 			return new List<int>();
 		}
 
-		public static GrayscaleFloatImage GradientMagnitude( ColorFloatImage image, List<int> xWindow, List<int> yWindow )
+		public static GrayscaleFloatImage GradientMagnitude( ColorFloatImage image, List<float> xWindow, List<float> yWindow )
 		{
 			GrayscaleFloatImage dest = new GrayscaleFloatImage( image.Width, image.Height );
 
-			int windowSide = 3;
-
-			if ( xWindow.Count == 4 )
-				windowSide = 2;
+            int windowSide = (int) Math.Pow(xWindow.Count, 0.5);
 
 			for ( int y = 0; y < image.Height; y++ )
 				for ( int x = 0; x < image.Width; x++ )
@@ -370,13 +373,36 @@ namespace ImageReadCS
 							pix.Add( image[ i[ n ], j[ k ] ] );
 
 					dest[ x, y ] = (float) Math.Sqrt(
-						Math.Pow( RGB2GrayPix( Convolve( xWindow, pix ) ), 2 ) +
-						Math.Pow( RGB2GrayPix( Convolve( yWindow, pix ) ), 2 ) );
+						Math.Pow( RGB2GrayPix( Convolve( xWindow, pix, 1 ) ), 2 ) +
+						Math.Pow( RGB2GrayPix( Convolve( yWindow, pix, 1 ) ), 2 ) );
 				}
 			return dest;
 		}
 
-		public static ColorFloatImage Roberts( ColorFloatImage image, int diag )
+        public static ColorFloatImage Gradient(ColorFloatImage image, float[] window, float divider)
+        {
+            ColorFloatImage dest = new ColorFloatImage(image.Width, image.Height);
+
+            int windowSide = (int)Math.Pow(window.Length, 0.5);
+
+            for (int y = 0; y < image.Height; y++)
+                for (int x = 0; x < image.Width; x++)
+                {
+                    List<int> i = NeighbourIndexes(x, image.Width - 1);
+                    List<int> j = NeighbourIndexes(y, image.Height - 1);
+                    List<ColorFloatPixel> pix = new List<ColorFloatPixel>();
+
+                    for (int k = 0; k < windowSide; k++)
+                        for (int n = 0; n < windowSide; n++)
+                            pix.Add(image[i[n], j[k]]);
+
+                    dest[x, y] = Convolve(window, pix, divider);
+                }
+
+            return dest;
+        }
+
+		public static ColorFloatImage Roberts( ColorFloatImage image, int diag ) //todo rewrite
 		{
 			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
 			int a11 = 1, a12 = 0, a21 = 0, a22 = -1;
@@ -430,7 +456,7 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		public static ColorFloatImage Median( ColorFloatImage image, int rad )
+		public static ColorFloatImage Median( ColorFloatImage image, int rad ) //todo rewrite
 		{
 			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
 
@@ -475,7 +501,7 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		public static ColorFloatImage GaussMagnitude( ColorFloatImage image, float sigma )
+		public static ColorFloatImage GaussMagnitude( ColorFloatImage image, float sigma ) //todo rewrite
 		{
 			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
 
@@ -532,64 +558,59 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		public 
+        public static float[,] LoGKernel(double sigma) //todo check formula
+        {
+            int sm = (int)sigma;
+            int half = 3 * sm;
+            int size = 6 * sm + 1;
+            double mul = 2 * sigma * sigma;
+
+            float[,] kernel = new float[size, size];
+
+            for (int j = 0; j < size; j++)
+            {
+                for (int i = 0; i < size; i++)
+                {
+                    double r = Math.Pow(i - half, 2) + Math.Pow(j - half, 2);
+                    kernel[i, j] = (float)(((r - mul) / Math.Pow(sigma, 4)) * Math.Exp(-r / mul));
+                }
+            }
+            return kernel;
+        }
+
+        public static ConvolutionKernel GaussKernel(float sigma) //todo check
+        {
+            int sm = (int)sigma;
+            int half = 3 * sm;
+            int size = 6 * sm + 1;
+            float mul = 2 * sigma * sigma;
+            float piMul = 1 / (float)Math.PI * mul;
+
+            ConvolutionKernel gaussKernel = new ConvolutionKernel();
+            gaussKernel.Kernel = new float[size * size];
+            float gaussSum = 0;
+
+            for (int j = 0; j < size; j++)
+            {
+                for (int i = 0; i < size; i++)
+                {
+                    double r = Math.Pow(i - half, 2) + Math.Pow(j - half, 2);
+                    float expr = (float)(piMul * Math.Exp(-r / mul));
+                    gaussKernel.Kernel[j * size + i] = expr; 
+                    gaussSum += expr;
+                }
+            }
+
+            gaussKernel.Sum = gaussSum;
+
+            return gaussKernel;
+        }
 
 
 		public static ColorFloatImage Gauss( ColorFloatImage image, float sigma )
 		{
-			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
-
-			float mul = 2 * sigma * sigma;
-			int sm = (int) sigma;
-			const float PI = (float) ( Math.PI );
-			float n = 1 / PI * mul;
-
-			float[,] Gauss_matrix = new float[ 6 * sm + 1, 6 * sm + 1 ];
-
-			float gauss_sum = 0;
-
-			for ( int j = 0; j <= 6 * sm; j++ )
-			{
-				for ( int i = 0; i <= 6 * sm; i++ )
-				{
-					Gauss_matrix[ i, j ] = n * (float) Math.Exp( -1 *
-						  ( ( j - ( 3 * sm ) ) * ( j - ( 3 * sm ) ) + ( i - ( 3 * sm ) ) * ( i - ( 3 * sm ) ) ) / mul );
-					gauss_sum += Gauss_matrix[ i, j ];
-				}
-			}
-
-			int flag_i = 1, flag_j = 1;
-			int flag_ni = 0, flag_nj = 0;
-
-			for ( int y = 0; y < image.Height; y++ )
-				for ( int x = 0; x < image.Width; x++ )
-				{
-					float r = 0, g = 0, b = 0;
-					for ( int j = y - 3 * sm; j <= y + 3 * sm; j++ )
-						for ( int i = x - 3 * sm; i <= x + 3 * sm; i++ )
-						{
-							if ( i < 0 ) flag_i = 0;
-							if ( j < 0 ) flag_j = 0;
-							if ( i > image.Width - 1 ) flag_ni = i - image.Width + 1;
-							if ( j > image.Height - 1 ) flag_nj = j - image.Height + 1;
-
-							r += image[ i * flag_i - flag_ni, j * flag_j - flag_nj ].r *
-								  Gauss_matrix[ i + 3 * sm - x, j + 3 * sm - y ] / gauss_sum;
-							g += image[ i * flag_i - flag_ni, j * flag_j - flag_nj ].g *
-								  Gauss_matrix[ i + 3 * sm - x, j + 3 * sm - y ] / gauss_sum;
-							b += image[ i * flag_i - flag_ni, j * flag_j - flag_nj ].b *
-								  Gauss_matrix[ i + 3 * sm - x, j + 3 * sm - y ] / gauss_sum;
-
-							flag_i = 1;
-							flag_j = 1;
-							flag_ni = 0;
-							flag_nj = 0;
-						}
-
-					dest[ x, y ] = new ColorFloatPixel( b, g, r, image[ x, y ].a );
-
-				}
-			return dest;
+            ConvolutionKernel kernel = GaussKernel(sigma);
+            return Gradient(image, kernel.Kernel, kernel.Sum);
 		}
 
 	}
