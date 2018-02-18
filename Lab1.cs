@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ImageReadCS
 {
@@ -346,23 +347,36 @@ namespace ImageReadCS
 
 		static List<int> NeighbourIndexes( int value, int max, int halfWindow, FillMode mode )
 		{
-			if (mode == FillMode.Constant )
+            int leftBoundary = value - halfWindow;
+            int rightBoundary = value + halfWindow;
+            if ( leftBoundary > 0 && rightBoundary < max )
 			{
+                return Enumerable.Range(leftBoundary, rightBoundary).ToList();
+			}
 
-			}
-			if ( value > 0 && value < max )
+            List<int> leftPart = new List<int>();
+            List<int> rightPart = new List<int>();
+            if (mode == FillMode.Constant)
+            {
+                if (leftBoundary <= 0)
+                {
+                    leftPart = Enumerable.Repeat(0, leftBoundary).ToList();
+                    rightPart = Enumerable.Range(0, rightBoundary).ToList();
+                }
+                leftPart = Enumerable.Range(leftBoundary, max).ToList();
+                rightPart = Enumerable.Repeat(max, rightBoundary).ToList();
+            }
+            else if ( mode == FillMode.Reflection )
 			{
-				return new List<int>() { value - 1, value, value + 1 };
+                if (leftBoundary <= 0)
+                {
+                    leftPart = Enumerable.Range(0, leftBoundary).ToList();
+                    rightPart = Enumerable.Range(0, rightBoundary).ToList();
+                }
+                leftPart = Enumerable.Range(leftBoundary, max).ToList();
+                rightPart = Enumerable.Repeat(max, rightBoundary).ToList();
 			}
-			if ( value <= 0 )
-			{
-				return new List<int>() { 0, 0, 1 };
-			}
-			if ( value >= max )
-			{
-				return new List<int>() { max - 1, max, max };
-			}
-			return new List<int>();
+            return leftPart.Concat(rightPart).ToList();
 		}
 
 		public static GrayscaleFloatImage GradientMagnitude( ColorFloatImage image, float[] xWindow, float[] yWindow )
@@ -370,12 +384,13 @@ namespace ImageReadCS
 			GrayscaleFloatImage dest = new GrayscaleFloatImage( image.Width, image.Height );
 
             int windowSide = (int) Math.Pow(xWindow.Length, 0.5);
+            int halfWindowSide = (windowSide - 1) / 2;
 
 			for ( int y = 0; y < image.Height; y++ )
 				for ( int x = 0; x < image.Width; x++ )
 				{
-					List<int> i = NeighbourIndexes( x, image.Width - 1 );
-					List<int> j = NeighbourIndexes( y, image.Height - 1 );
+                    List<int> i = NeighbourIndexes( x, image.Width - 1, halfWindowSide, FillMode.Reflection );
+                    List<int> j = NeighbourIndexes( y, image.Height - 1, halfWindowSide, FillMode.Reflection );
 					List<ColorFloatPixel> pix = new List<ColorFloatPixel>();
 
 					for ( int k = 0; k < windowSide; k++ )
@@ -394,12 +409,13 @@ namespace ImageReadCS
             ColorFloatImage dest = new ColorFloatImage(image.Width, image.Height);
 
             int windowSide = (int)Math.Pow(window.Length, 0.5);
+            int halfWindowSide = (windowSide - 1) / 2;
 
             for (int y = 0; y < image.Height; y++)
                 for (int x = 0; x < image.Width; x++)
                 {
-                    List<int> i = NeighbourIndexes(x, image.Width - 1);
-                    List<int> j = NeighbourIndexes(y, image.Height - 1);
+                    List<int> i = NeighbourIndexes(x, image.Width - 1, halfWindowSide, FillMode.Reflection);
+                    List<int> j = NeighbourIndexes(y, image.Height - 1, halfWindowSide, FillMode.Reflection);
                     List<ColorFloatPixel> pix = new List<ColorFloatPixel>();
 
                     for (int k = 0; k < windowSide; k++)
