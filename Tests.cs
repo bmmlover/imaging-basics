@@ -11,6 +11,7 @@ namespace ImageReadCS
 	[TestFixture]
 	class Tests
 	{
+		public static string inputname = "parrots";
 		public void SetDir()
 		{
 			var dir = Path.GetDirectoryName( typeof( Program ).Assembly.Location );
@@ -19,7 +20,7 @@ namespace ImageReadCS
 
 		public ColorFloatImage ReadImage()
 		{
-			string inputFileName = "input//mandarin.bmp";
+			string inputFileName = $"input//{inputname}.bmp";
 			if ( !File.Exists( inputFileName ) )
 			{
 				Console.WriteLine( "File doesn't exist" );
@@ -30,7 +31,7 @@ namespace ImageReadCS
 
 		public void SaveImage( ColorFloatImage image, string filename )
 		{
-			List<string> outputFileName = new List<string>() { "mandarin_", "", ".bmp" };
+			List<string> outputFileName = new List<string>() { $"{inputname}_", "", ".bmp" };
 			outputFileName[ 1 ] = filename;
 			ImageIO.ImageToFile( image, String.Concat( outputFileName ) );
 		}
@@ -54,11 +55,6 @@ namespace ImageReadCS
 		public void TestGradient()
 		{
 			SetDir();
-
-			var a = NeighbourIndexes( 3, 256, 3, FillMode.Constant );
-			a = NeighbourIndexes( 3, 256, 3, FillMode.Reflection );
-			a = NeighbourIndexes( 4, 256, 3, FillMode.Constant );
-			a = NeighbourIndexes( 4, 256, 3, FillMode.Reflection );
 			ColorFloatImage image = ReadImage();
 			image = Gauss( image, 3);
 			SaveImage( image, "gauss" );

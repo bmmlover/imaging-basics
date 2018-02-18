@@ -4,16 +4,16 @@ using System.Linq;
 
 namespace ImageReadCS
 {
-    public class ConvolutionKernel
-    {
-        public float[] Kernel { get; set; }
-        public float Sum { get; set; }
-    }
+	public class ConvolutionKernel
+	{
+		public float[] Kernel { get; set; }
+		public float Sum { get; set; }
+	}
 
 	public enum FillMode
 	{
-		Constant=1,
-		Reflection=2
+		Constant = 1,
+		Reflection = 2
 	}
 
 	public static class Lab1
@@ -234,9 +234,9 @@ namespace ImageReadCS
 
 			for ( int i = 0; i < pix.Count; i++ )
 			{
-                red += coef[ i ] * pix[ i ].r / divider;
-                green += coef[ i ] * pix[ i ].g / divider;
-                blue += coef[ i ] * pix[ i ].b / divider;
+				red += coef[ i ] * pix[ i ].r / divider;
+				green += coef[ i ] * pix[ i ].g / divider;
+				blue += coef[ i ] * pix[ i ].b / divider;
 			}
 
 			return new ColorFloatPixel( blue, green, red, pix[ 0 ].a );
@@ -347,56 +347,57 @@ namespace ImageReadCS
 
 		public static List<int> NeighbourIndexes( int value, int max, int halfWindow, FillMode mode )
 		{
-            int leftBoundary = value - halfWindow;
-            int rightBoundary = value + halfWindow;
-            if ( leftBoundary >= 0 && rightBoundary < max )
+			int leftBoundary = value - halfWindow;
+			int rightBoundary = value + halfWindow;
+			if ( leftBoundary >= 0 && rightBoundary <= max )
 			{
-                return Enumerable.Range(leftBoundary, 2*halfWindow + 1).ToList();
+				return Enumerable.Range( leftBoundary, 2 * halfWindow + 1 ).ToList();
 			}
 
-            List<int> leftPart = new List<int>();
-            List<int> rightPart = new List<int>();
-            if (mode == FillMode.Constant)
-            {
-                if (leftBoundary <= 0)
-                {
-                    leftPart = Enumerable.Repeat(0, -leftBoundary + 1).ToList();
-                    rightPart = Enumerable.Range(1, rightBoundary).ToList();
-                }
-					else
-					{
-						leftPart = Enumerable.Range( leftBoundary, max ).ToList();
-						rightPart = Enumerable.Repeat( max, rightBoundary ).ToList();
-					}
-            }
-            else if ( mode == FillMode.Reflection )
+			List<int> leftPart = new List<int>();
+			List<int> rightPart = new List<int>();
+
+			if ( mode == FillMode.Constant )
 			{
-                if (leftBoundary <= 0)
-                {
-                    leftPart = Enumerable.Range(0, -leftBoundary + 1).Reverse().ToList();
-                    rightPart = Enumerable.Range(1, rightBoundary).ToList();
-                }
+				if ( leftBoundary <= 0 )
+				{
+					leftPart = Enumerable.Repeat( 0, -leftBoundary + 1 ).ToList();
+					rightPart = Enumerable.Range( 1, rightBoundary ).ToList();
+				}
 				else
 				{
-					leftPart = Enumerable.Range( leftBoundary, max ).ToList();
-					rightPart = Enumerable.Repeat( max, rightBoundary ).ToList();
+					leftPart = Enumerable.Range( leftBoundary, max - leftBoundary + 1 ).ToList();
+					rightPart = Enumerable.Repeat( max, rightBoundary - max ).ToList();
 				}
 			}
-            return leftPart.Concat(rightPart).ToList();
+			else if ( mode == FillMode.Reflection )
+			{
+				if ( leftBoundary <= 0 )
+				{
+					leftPart = Enumerable.Range( 0, -leftBoundary + 1 ).Reverse().ToList();
+					rightPart = Enumerable.Range( 1, rightBoundary ).ToList();
+				}
+				else
+				{
+					leftPart = Enumerable.Range( leftBoundary, max - leftBoundary + 1 ).ToList();
+					rightPart = Enumerable.Range( 2 * max - rightBoundary, rightBoundary - max ).Reverse().ToList();
+				}
+			}
+			return leftPart.Concat( rightPart ).ToList();
 		}
 
 		public static GrayscaleFloatImage GradientMagnitude( ColorFloatImage image, float[] xWindow, float[] yWindow )
 		{
 			GrayscaleFloatImage dest = new GrayscaleFloatImage( image.Width, image.Height );
 
-            int windowSide = (int) Math.Pow(xWindow.Length, 0.5);
-            int halfWindowSide = (windowSide - 1) / 2;
+			int windowSide = (int) Math.Pow( xWindow.Length, 0.5 );
+			int halfWindowSide = ( windowSide - 1 ) / 2;
 
 			for ( int y = 0; y < image.Height; y++ )
 				for ( int x = 0; x < image.Width; x++ )
 				{
-                    List<int> i = NeighbourIndexes( x, image.Width - 1, halfWindowSide, FillMode.Reflection );
-                    List<int> j = NeighbourIndexes( y, image.Height - 1, halfWindowSide, FillMode.Reflection );
+					List<int> i = NeighbourIndexes( x, image.Width - 1, halfWindowSide, FillMode.Reflection );
+					List<int> j = NeighbourIndexes( y, image.Height - 1, halfWindowSide, FillMode.Reflection );
 					List<ColorFloatPixel> pix = new List<ColorFloatPixel>();
 
 					for ( int k = 0; k < windowSide; k++ )
@@ -410,29 +411,29 @@ namespace ImageReadCS
 			return dest;
 		}
 
-        public static ColorFloatImage Gradient(ColorFloatImage image, float[] window, float divider)
-        {
-            ColorFloatImage dest = new ColorFloatImage(image.Width, image.Height);
+		public static ColorFloatImage Gradient( ColorFloatImage image, float[] window, float divider )
+		{
+			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
 
-            int windowSide = (int)Math.Pow(window.Length, 0.5);
-            int halfWindowSide = (windowSide - 1) / 2;
+			int windowSide = (int) Math.Pow( window.Length, 0.5 );
+			int halfWindowSide = ( windowSide - 1 ) / 2;
 
-            for (int y = 0; y < image.Height; y++)
-                for (int x = 0; x < image.Width; x++)
-                {
-                    List<int> i = NeighbourIndexes(x, image.Width - 1, halfWindowSide, FillMode.Reflection);
-                    List<int> j = NeighbourIndexes(y, image.Height - 1, halfWindowSide, FillMode.Reflection);
-                    List<ColorFloatPixel> pix = new List<ColorFloatPixel>();
+			for ( int y = 0; y < image.Height; y++ )
+				for ( int x = 0; x < image.Width; x++ )
+				{
+					List<int> i = NeighbourIndexes( x, image.Width - 1, halfWindowSide, FillMode.Reflection );
+					List<int> j = NeighbourIndexes( y, image.Height - 1, halfWindowSide, FillMode.Reflection );
+					List<ColorFloatPixel> pix = new List<ColorFloatPixel>();
 
-                    for (int k = 0; k < windowSide; k++)
-                        for (int n = 0; n < windowSide; n++)
-                            pix.Add(image[i[n], j[k]]);
+					for ( int k = 0; k < windowSide; k++ )
+						for ( int n = 0; n < windowSide; n++ )
+							pix.Add( image[ i[ n ], j[ k ] ] );
 
-                    dest[x, y] = Convolve(window, pix, divider);
-                }
+					dest[ x, y ] = Convolve( window, pix, divider );
+				}
 
-            return dest;
-        }
+			return dest;
+		}
 
 		public static ColorFloatImage Roberts( ColorFloatImage image, int diag ) //todo rewrite
 		{
@@ -590,59 +591,59 @@ namespace ImageReadCS
 			return dest;
 		}
 
-        public static float[,] LoGKernel(double sigma) //todo check formula
-        {
-            int sm = (int)sigma;
-            int half = 3 * sm;
-            int size = 6 * sm + 1;
-            double mul = 2 * sigma * sigma;
+		public static float[,] LoGKernel( double sigma ) //todo check formula
+		{
+			int sm = (int) sigma;
+			int half = 3 * sm;
+			int size = 6 * sm + 1;
+			double mul = 2 * sigma * sigma;
 
-            float[,] kernel = new float[size, size];
+			float[,] kernel = new float[ size, size ];
 
-            for (int j = 0; j < size; j++)
-            {
-                for (int i = 0; i < size; i++)
-                {
-                    double r = Math.Pow(i - half, 2) + Math.Pow(j - half, 2);
-                    kernel[i, j] = (float)(((r - mul) / Math.Pow(sigma, 4)) * Math.Exp(-r / mul));
-                }
-            }
-            return kernel;
-        }
+			for ( int j = 0; j < size; j++ )
+			{
+				for ( int i = 0; i < size; i++ )
+				{
+					double r = Math.Pow( i - half, 2 ) + Math.Pow( j - half, 2 );
+					kernel[ i, j ] = (float) ( ( ( r - mul ) / Math.Pow( sigma, 4 ) ) * Math.Exp( -r / mul ) );
+				}
+			}
+			return kernel;
+		}
 
-        public static ConvolutionKernel GaussKernel(float sigma) //todo check
-        {
-            int sm = (int)sigma;
-            int half = 3 * sm;
-            int size = 6 * sm + 1;
-            float mul = 2 * sigma * sigma;
-            float piMul = 1 / (float)Math.PI * mul;
+		public static ConvolutionKernel GaussKernel( float sigma ) //todo check
+		{
+			int sm = (int) sigma;
+			int half = 3 * sm;
+			int size = 6 * sm + 1;
+			float mul = 2 * sigma * sigma;
+			float piMul = 1 / (float) Math.PI * mul;
 
-            ConvolutionKernel gaussKernel = new ConvolutionKernel();
-            gaussKernel.Kernel = new float[size * size];
-            float gaussSum = 0;
+			ConvolutionKernel gaussKernel = new ConvolutionKernel();
+			gaussKernel.Kernel = new float[ size * size ];
+			float gaussSum = 0;
 
-            for (int j = 0; j < size; j++)
-            {
-                for (int i = 0; i < size; i++)
-                {
-                    double r = Math.Pow(i - half, 2) + Math.Pow(j - half, 2);
-                    float expr = (float)(piMul * Math.Exp(-r / mul));
-                    gaussKernel.Kernel[j * size + i] = expr; 
-                    gaussSum += expr;
-                }
-            }
+			for ( int j = 0; j < size; j++ )
+			{
+				for ( int i = 0; i < size; i++ )
+				{
+					double r = Math.Pow( i - half, 2 ) + Math.Pow( j - half, 2 );
+					float expr = (float) ( piMul * Math.Exp( -r / mul ) );
+					gaussKernel.Kernel[ j * size + i ] = expr;
+					gaussSum += expr;
+				}
+			}
 
-            gaussKernel.Sum = gaussSum;
+			gaussKernel.Sum = gaussSum;
 
-            return gaussKernel;
-        }
+			return gaussKernel;
+		}
 
 
 		public static ColorFloatImage Gauss( ColorFloatImage image, float sigma )
 		{
-            ConvolutionKernel kernel = GaussKernel(sigma);
-            return Gradient(image, kernel.Kernel, kernel.Sum);
+			ConvolutionKernel kernel = GaussKernel( sigma );
+			return Gradient( image, kernel.Kernel, kernel.Sum );
 		}
 
 	}
