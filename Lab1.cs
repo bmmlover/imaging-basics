@@ -10,7 +10,7 @@ namespace ImageReadCS
         public float Sum { get; set; }
     }
 
-	enum FillMode
+	public enum FillMode
 	{
 		Constant=1,
 		Reflection=2
@@ -345,13 +345,13 @@ namespace ImageReadCS
 															  0, 0, 0,
 															  1, 2, 1 };
 
-		static List<int> NeighbourIndexes( int value, int max, int halfWindow, FillMode mode )
+		public static List<int> NeighbourIndexes( int value, int max, int halfWindow, FillMode mode )
 		{
             int leftBoundary = value - halfWindow;
             int rightBoundary = value + halfWindow;
-            if ( leftBoundary > 0 && rightBoundary < max )
+            if ( leftBoundary >= 0 && rightBoundary < max )
 			{
-                return Enumerable.Range(leftBoundary, rightBoundary).ToList();
+                return Enumerable.Range(leftBoundary, 2*halfWindow + 1).ToList();
 			}
 
             List<int> leftPart = new List<int>();
@@ -360,21 +360,27 @@ namespace ImageReadCS
             {
                 if (leftBoundary <= 0)
                 {
-                    leftPart = Enumerable.Repeat(0, leftBoundary).ToList();
-                    rightPart = Enumerable.Range(0, rightBoundary).ToList();
+                    leftPart = Enumerable.Repeat(0, -leftBoundary + 1).ToList();
+                    rightPart = Enumerable.Range(1, rightBoundary).ToList();
                 }
-                leftPart = Enumerable.Range(leftBoundary, max).ToList();
-                rightPart = Enumerable.Repeat(max, rightBoundary).ToList();
+					else
+					{
+						leftPart = Enumerable.Range( leftBoundary, max ).ToList();
+						rightPart = Enumerable.Repeat( max, rightBoundary ).ToList();
+					}
             }
             else if ( mode == FillMode.Reflection )
 			{
                 if (leftBoundary <= 0)
                 {
-                    leftPart = Enumerable.Range(0, leftBoundary).ToList();
-                    rightPart = Enumerable.Range(0, rightBoundary).ToList();
+                    leftPart = Enumerable.Range(0, -leftBoundary + 1).Reverse().ToList();
+                    rightPart = Enumerable.Range(1, rightBoundary).ToList();
                 }
-                leftPart = Enumerable.Range(leftBoundary, max).ToList();
-                rightPart = Enumerable.Repeat(max, rightBoundary).ToList();
+				else
+				{
+					leftPart = Enumerable.Range( leftBoundary, max ).ToList();
+					rightPart = Enumerable.Repeat( max, rightBoundary ).ToList();
+				}
 			}
             return leftPart.Concat(rightPart).ToList();
 		}

@@ -54,6 +54,11 @@ namespace ImageReadCS
 		public void TestGradient()
 		{
 			SetDir();
+
+			var a = NeighbourIndexes( 3, 256, 3, FillMode.Constant );
+			a = NeighbourIndexes( 3, 256, 3, FillMode.Reflection );
+			a = NeighbourIndexes( 4, 256, 3, FillMode.Constant );
+			a = NeighbourIndexes( 4, 256, 3, FillMode.Reflection );
 			ColorFloatImage image = ReadImage();
 			image = Gauss( image, 3);
 			SaveImage( image, "gauss" );
