@@ -534,7 +534,7 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		public static ColorFloatImage GaussMagnitude( ColorFloatImage image, float sigma ) //todo rewrite
+		public static ColorFloatImage GaussMagnitude2( ColorFloatImage image, float sigma ) //todo rewrite
 		{
 			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
 
@@ -591,24 +591,26 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		public static float[,] LoGKernel( double sigma ) //todo check formula
+        public static ConvolutionKernel LoGKernel( double sigma ) //todo check formula
 		{
 			int sm = (int) sigma;
 			int half = 3 * sm;
 			int size = 6 * sm + 1;
 			double mul = 2 * sigma * sigma;
 
-			float[,] kernel = new float[ size, size ];
+            ConvolutionKernel logKernel = new ConvolutionKernel();
+            logKernel.Kernel = new float[size * size];
+            //float gaussSum = 0;
 
 			for ( int j = 0; j < size; j++ )
 			{
 				for ( int i = 0; i < size; i++ )
 				{
 					double r = Math.Pow( i - half, 2 ) + Math.Pow( j - half, 2 );
-					kernel[ i, j ] = (float) ( ( ( r - mul ) / Math.Pow( sigma, 4 ) ) * Math.Exp( -r / mul ) );
+                    logKernel.Kernel[ j * size + i ] = (float) ( ( ( r - mul ) / Math.Pow( sigma, 4 ) ) * Math.Exp( -r / mul ) );
 				}
 			}
-			return kernel;
+            return logKernel;
 		}
 
 		public static ConvolutionKernel GaussKernel( float sigma ) //todo check
@@ -645,6 +647,12 @@ namespace ImageReadCS
 			ConvolutionKernel kernel = GaussKernel( sigma );
 			return Gradient( image, kernel.Kernel, kernel.Sum );
 		}
+
+        public static ColorFloatImage GaussMagnitude(ColorFloatImage image, float sigma)
+        {
+            ConvolutionKernel kernel = LoGKernel(sigma);
+            return Gradient(image, kernel.Kernel, kernel.Sum);
+        }
 
 	}
 }
