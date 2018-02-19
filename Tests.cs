@@ -11,7 +11,7 @@ namespace ImageReadCS
 	[TestFixture]
 	class Tests
 	{
-		public static string inputname = "parrots";
+		public static string inputname = "mandarin";
 		public void SetDir()
 		{
 			var dir = Path.GetDirectoryName( typeof( Program ).Assembly.Location );
@@ -29,7 +29,7 @@ namespace ImageReadCS
 			return ImageIO.FileToColorFloatImage( inputFileName );
 		}
 
-		public void SaveImage( ColorFloatImage image, string filename )
+		public void SaveImage( GrayscaleFloatImage image, string filename )
 		{
 			List<string> outputFileName = new List<string>() { $"{inputname}_", "", ".bmp" };
 			outputFileName[ 1 ] = filename;
@@ -47,7 +47,7 @@ namespace ImageReadCS
 			{
 				ColorFloatImage image = ReadImage();
 				image = RotateCW( image, angle );
-				SaveImage( image, angle.ToString() );
+				//SaveImage( image, angle.ToString() );
 			}
 		}
 
@@ -56,8 +56,8 @@ namespace ImageReadCS
 		{
 			SetDir();
 			ColorFloatImage image = ReadImage();
-			image = Gauss( image, 3);
-			SaveImage( image, "gauss" );
+			GrayscaleFloatImage nimage = GaussMagnitude( image, 3);
+			SaveImage( nimage, "gauss" );
 		}
 	}
 }

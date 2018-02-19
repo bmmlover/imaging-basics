@@ -435,6 +435,30 @@ namespace ImageReadCS
 			return dest;
 		}
 
+		public static GrayscaleFloatImage GradientGrayscale( ColorFloatImage image, float[] window, float divider )
+		{
+			GrayscaleFloatImage dest = new GrayscaleFloatImage( image.Width, image.Height );
+
+			int windowSide = (int) Math.Pow( window.Length, 0.5 );
+			int halfWindowSide = ( windowSide - 1 ) / 2;
+
+			for ( int y = 0; y < image.Height; y++ )
+				for ( int x = 0; x < image.Width; x++ )
+				{
+					List<int> i = NeighbourIndexes( x, image.Width - 1, halfWindowSide, FillMode.Reflection );
+					List<int> j = NeighbourIndexes( y, image.Height - 1, halfWindowSide, FillMode.Reflection );
+					List<ColorFloatPixel> pix = new List<ColorFloatPixel>();
+
+					for ( int k = 0; k < windowSide; k++ )
+						for ( int n = 0; n < windowSide; n++ )
+							pix.Add( image[ i[ n ], j[ k ] ] );
+
+					dest[ x, y ] = RGB2GrayPix(Convolve( window, pix, divider ));
+				}
+
+			return dest;
+		}
+
 		public static ColorFloatImage Roberts( ColorFloatImage image, int diag ) //todo rewrite
 		{
 			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
@@ -648,10 +672,10 @@ namespace ImageReadCS
 			return Gradient( image, kernel.Kernel, kernel.Sum );
 		}
 
-        public static ColorFloatImage GaussMagnitude(ColorFloatImage image, float sigma)
+        public static GrayscaleFloatImage GaussMagnitude(ColorFloatImage image, float sigma)
         {
             ConvolutionKernel kernel = LoGKernel(sigma);
-            return Gradient(image, kernel.Kernel, kernel.Sum);
+            return GradientGrayscale(image, kernel.Kernel, 1);
         }
 
 	}
