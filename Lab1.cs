@@ -53,7 +53,7 @@ namespace ImageReadCS
 			return image;
 		}
 
-		static double ConvertToRadians( double angle )
+		static double DegreeToRadian( double angle )
 		{
 			return ( Math.PI / 180 ) * angle;
 		}
@@ -104,7 +104,7 @@ namespace ImageReadCS
 					return dest;
 			}
 
-			double rad = ConvertToRadians( angle );
+			double rad = DegreeToRadian( angle );
 
 			int destWidth = (int) Math.Ceiling( Math.Abs( source.Width * Math.Cos( rad ) ) + Math.Abs( source.Height * Math.Sin( rad ) ) );
 			int destHeight = (int) Math.Ceiling( Math.Abs( source.Width * Math.Sin( rad ) ) + Math.Abs( source.Height * Math.Cos( rad ) ) );
@@ -386,6 +386,19 @@ namespace ImageReadCS
 			return leftPart.Concat( rightPart ).ToList();
 		}
 
+		public static float FitAngleInBin(double radian )
+		{
+			if ( radian < 0 || radian > Math.PI)
+				throw new Exception(radian.ToString());
+			if ( radian <= Math.PI / 8 || radian > 7 * Math.PI / 8 )
+				return 0;
+			if ( radian > Math.PI / 8 && radian <= 3 * Math.PI / 8 )
+				return 45;
+			if ( radian > 3 * Math.PI / 8 && radian <= 5 * Math.PI / 8 )
+				return 90;
+			return 135;
+		}
+
 		public static List<GrayscaleFloatImage> MagnitudeAndDirections( ColorFloatImage image, float[] xWindow, float[] yWindow )
 		{
 			GrayscaleFloatImage magn = new GrayscaleFloatImage( image.Width, image.Height );
@@ -408,8 +421,8 @@ namespace ImageReadCS
                     float xPix = RGB2GrayPix(Convolve(xWindow, pix, 1));
                     float yPix = RGB2GrayPix(Convolve(yWindow, pix, 1));
 
-					magn[ x, y ] = (float) Math.Sqrt( Math.Pow( xPix, 2 ) + Math.Pow( yPix, 2 ) );
-                    angles[x, y] = (float) Math.Atan2(yPix, xPix);
+						  magn[ x, y ] = (float) Math.Sqrt( Math.Pow( xPix, 2 ) + Math.Pow( yPix, 2 ) );
+                    angles[x, y] = FitAngleInBin( Math.Abs(Math.Atan2(yPix, xPix)) );
 				}
             return new List<GrayscaleFloatImage>(){magn, angles};
 		}

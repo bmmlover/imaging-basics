@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using static ImageReadCS.Lab1;
+using static ImageReadCS.Lab2;
 
 namespace ImageReadCS
 {
@@ -56,8 +57,8 @@ namespace ImageReadCS
 		{
 			SetDir();
 			ColorFloatImage image = ReadImage();
-			GrayscaleFloatImage nimage = GaussMagnitude( image, 3);
-			SaveImage( nimage, "gauss" );
+			var nimage = Canny( image, 3);
+			//SaveImage( nimage, "gauss" );
 		}
 	}
 }
