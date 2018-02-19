@@ -386,9 +386,10 @@ namespace ImageReadCS
 			return leftPart.Concat( rightPart ).ToList();
 		}
 
-		public static GrayscaleFloatImage GradientMagnitude( ColorFloatImage image, float[] xWindow, float[] yWindow )
+		public static GrayscaleFloatImage MagnitudeAndDirections( ColorFloatImage image, float[] xWindow, float[] yWindow )
 		{
 			GrayscaleFloatImage dest = new GrayscaleFloatImage( image.Width, image.Height );
+            GrayscaleFloatImage angles = new GrayscaleFloatImage(image.Width, image.Height);
 
 			int windowSide = (int) Math.Pow( xWindow.Length, 0.5 );
 			int halfWindowSide = ( windowSide - 1 ) / 2;
@@ -403,10 +404,12 @@ namespace ImageReadCS
 					for ( int k = 0; k < windowSide; k++ )
 						for ( int n = 0; n < windowSide; n++ )
 							pix.Add( image[ i[ n ], j[ k ] ] );
+                
+                    float xPix = RGB2GrayPix(Convolve(xWindow, pix, 1));
+                    float yPix = RGB2GrayPix(Convolve(yWindow, pix, 1));
 
-					dest[ x, y ] = (float) Math.Sqrt(
-						Math.Pow( RGB2GrayPix( Convolve( xWindow, pix, 1 ) ), 2 ) +
-						Math.Pow( RGB2GrayPix( Convolve( yWindow, pix, 1 ) ), 2 ) );
+					dest[ x, y ] = (float) Math.Sqrt( Math.Pow( xPix, 2 ) + Math.Pow( yPix, 2 ) );
+                    angles[x, y] = (float) Math.Atan2(yPix, xPix);
 				}
 			return dest;
 		}
@@ -558,123 +561,84 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		public static ColorFloatImage GaussMagnitude2( ColorFloatImage image, float sigma ) //todo rewrite
-		{
-			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
+        public static float LoGPoint(int x, int y, double sigma)
+        {
+            double mul = 2 * sigma * sigma;
+            double r = Math.Pow(x, 2) + Math.Pow(y, 2);
+            return (float)((r - mul) / Math.Pow(sigma, 4) * Math.Exp(-r / mul));
+        }
 
-			float mul = 2 * sigma * sigma;
-			int sm = (int) sigma;
-			const float PI = (float) ( Math.PI );
-			float n = 1 / PI * mul;
+        public static float GaussPoint(int x, int y, double sigma)
+        {
+            double mul = 2 * sigma * sigma;
+            double piMul = 1 / Math.PI * mul;
+            double r = Math.Pow(x, 2) + Math.Pow(y, 2);
+            return (float)(piMul * Math.Exp(-r / mul));
+        }
 
-			float[,] Gauss_matrix = new float[ 6 * sm + 1, 6 * sm + 1 ];
+        public static float GaussDerivativePoint(int x, int y, double sigma)
+        {
+            double mul = 2 * sigma * sigma;
+            double piMul = 1 / Math.PI * mul;
+            double r = Math.Pow(x, 2) + Math.Pow(y, 2);
+            return (float)(piMul * x * Math.Exp(-r / mul));
+        }
 
-			float gauss_sum = 0;
-
-			for ( int j = 0; j <= 6 * sm; j++ )
-			{
-				for ( int i = 0; i <= 6 * sm; i++ )
-				{
-					Gauss_matrix[ i, j ] = n * (float) Math.Exp( -1 *
-						  ( ( j - ( 3 * sm ) ) * ( j - ( 3 * sm ) ) + ( i - ( 3 * sm ) ) * ( i - ( 3 * sm ) ) ) / mul );
-					gauss_sum += Gauss_matrix[ i, j ];
-				}
-			}
-
-			int flag_i = 1, flag_j = 1;
-			int flag_ni = 0, flag_nj = 0;
-
-			for ( int y = 0; y < image.Height; y++ )
-				for ( int x = 0; x < image.Width; x++ )
-				{
-					float r = 0, g = 0, b = 0;
-					for ( int j = y - 3 * sm; j <= y + 3 * sm; j++ )
-						for ( int i = x - 3 * sm; i <= x + 3 * sm; i++ )
-						{
-							if ( i < 0 ) flag_i = 0;
-							if ( j < 0 ) flag_j = 0;
-							if ( i > image.Width - 1 ) flag_ni = i - image.Width + 1;
-							if ( j > image.Height - 1 ) flag_nj = j - image.Height + 1;
-
-							r += image[ i * flag_i - flag_ni, j * flag_j - flag_nj ].r *
-								  Gauss_matrix[ i + 3 * sm - x, j + 3 * sm - y ] / gauss_sum;
-							g += image[ i * flag_i - flag_ni, j * flag_j - flag_nj ].g *
-								  Gauss_matrix[ i + 3 * sm - x, j + 3 * sm - y ] / gauss_sum;
-							b += image[ i * flag_i - flag_ni, j * flag_j - flag_nj ].b *
-								  Gauss_matrix[ i + 3 * sm - x, j + 3 * sm - y ] / gauss_sum;
-
-							flag_i = 1;
-							flag_j = 1;
-							flag_ni = 0;
-							flag_nj = 0;
-						}
-
-					dest[ x, y ] = new ColorFloatPixel( b, g, r, image[ x, y ].a );
-
-				}
-			return dest;
-		}
-
-        public static ConvolutionKernel LoGKernel( double sigma ) //todo check formula
+        public static ConvolutionKernel CalculateKernel( double sigma, 
+                                                        Func<int, int, double, float> function) //todo check formula
 		{
 			int sm = (int) sigma;
 			int half = 3 * sm;
 			int size = 6 * sm + 1;
-			double mul = 2 * sigma * sigma;
 
-            ConvolutionKernel logKernel = new ConvolutionKernel();
-            logKernel.Kernel = new float[size * size];
-            //float gaussSum = 0;
-
-			for ( int j = 0; j < size; j++ )
-			{
-				for ( int i = 0; i < size; i++ )
-				{
-					double r = Math.Pow( i - half, 2 ) + Math.Pow( j - half, 2 );
-                    logKernel.Kernel[ j * size + i ] = (float) ( ( ( r - mul ) / Math.Pow( sigma, 4 ) ) * Math.Exp( -r / mul ) );
-				}
-			}
-            return logKernel;
-		}
-
-		public static ConvolutionKernel GaussKernel( float sigma ) //todo check
-		{
-			int sm = (int) sigma;
-			int half = 3 * sm;
-			int size = 6 * sm + 1;
-			float mul = 2 * sigma * sigma;
-			float piMul = 1 / (float) Math.PI * mul;
-
-			ConvolutionKernel gaussKernel = new ConvolutionKernel();
-			gaussKernel.Kernel = new float[ size * size ];
-			float gaussSum = 0;
+            ConvolutionKernel kernel = new ConvolutionKernel();
+            kernel.Kernel = new float[size * size];
+            float sum = 0;
 
 			for ( int j = 0; j < size; j++ )
-			{
-				for ( int i = 0; i < size; i++ )
-				{
-					double r = Math.Pow( i - half, 2 ) + Math.Pow( j - half, 2 );
-					float expr = (float) ( piMul * Math.Exp( -r / mul ) );
-					gaussKernel.Kernel[ j * size + i ] = expr;
-					gaussSum += expr;
-				}
-			}
-
-			gaussKernel.Sum = gaussSum;
-
-			return gaussKernel;
+                for ( int i = 0; i < size; i++ )
+                {
+                    float val = function(i - half, j - half, sigma);
+                    kernel.Kernel[j * size + i] = val;
+                    sum += val;
+                }
+				    
+            kernel.Sum = sum;
+            return kernel;
 		}
 
+        public static List<ConvolutionKernel> CalculateKernelXY(double sigma,
+                                                Func<int, int, double, float> function) //todo check formula
+        {
+            int sm = (int)sigma;
+            int half = 3 * sm;
+            int size = 6 * sm + 1;
+
+            ConvolutionKernel kernelX = new ConvolutionKernel();
+            kernelX.Kernel = new float[size * size];
+
+            ConvolutionKernel kernelY = new ConvolutionKernel();
+            kernelY.Kernel = new float[size * size];
+
+            for (int j = 0; j < size; j++)
+                for (int i = 0; i < size; i++)
+                {
+                    kernelX.Kernel[j * size + i] = function(i - half, j - half, sigma);
+                    kernelY.Kernel[j * size + i] = function(j - half, i - half, sigma);
+                }
+
+            return new List<ConvolutionKernel>() { kernelX, kernelY };
+        }
 
 		public static ColorFloatImage Gauss( ColorFloatImage image, float sigma )
 		{
-			ConvolutionKernel kernel = GaussKernel( sigma );
+            ConvolutionKernel kernel = CalculateKernel( sigma, GaussPoint );
 			return Gradient( image, kernel.Kernel, kernel.Sum );
 		}
 
         public static GrayscaleFloatImage GaussMagnitude(ColorFloatImage image, float sigma)
         {
-            ConvolutionKernel kernel = LoGKernel(sigma);
+            ConvolutionKernel kernel = CalculateKernel(sigma, LoGPoint);
             return GradientGrayscale(image, kernel.Kernel, 1);
         }
 

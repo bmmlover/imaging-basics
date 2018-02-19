@@ -1,9 +1,22 @@
 ﻿<Properties StartupConfiguration="{E62DF5A6-F9C3-4C88-BEE1-38F0125662EB}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Formats/ColorFloatImage.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Lab2.cs">
     <Files>
-      <File FileName="Lab1.cs" Line="25" Column="24" />
-      <File FileName="Formats/ColorFloatImage.cs" Line="48" Column="39" />
+      <File FileName="Lab1.cs" Line="389" Column="55" />
+      <File FileName="Lab2.cs" Line="57" Column="13" />
     </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="ImageReadCS" expanded="True">
+            <Node name="ImageReadCS" expanded="True">
+              <Node name="References" expanded="True" />
+              <Node name="Formats" expanded="True" />
+              <Node name="Lab2.cs" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

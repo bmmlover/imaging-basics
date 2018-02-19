@@ -51,9 +51,10 @@ namespace ImageReadCS
             return 0;
         }
 
-        public static double Canny(ColorFloatImage i1, float sigma)
+        public static double Canny(ColorFloatImage image, float sigma)
         {
-            GrayscaleFloatImage gray = RGB2Gray(i1);
+            var kernels = CalculateKernelXY(sigma, GaussDerivativePoint);
+            var magnAndDir = MagnitudeAndDirections(image, kernels[0].Kernel, kernels[1].Kernel);
 
 
             return 0;
