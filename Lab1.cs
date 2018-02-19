@@ -386,9 +386,9 @@ namespace ImageReadCS
 			return leftPart.Concat( rightPart ).ToList();
 		}
 
-		public static GrayscaleFloatImage MagnitudeAndDirections( ColorFloatImage image, float[] xWindow, float[] yWindow )
+		public static List<GrayscaleFloatImage> MagnitudeAndDirections( ColorFloatImage image, float[] xWindow, float[] yWindow )
 		{
-			GrayscaleFloatImage dest = new GrayscaleFloatImage( image.Width, image.Height );
+			GrayscaleFloatImage magn = new GrayscaleFloatImage( image.Width, image.Height );
             GrayscaleFloatImage angles = new GrayscaleFloatImage(image.Width, image.Height);
 
 			int windowSide = (int) Math.Pow( xWindow.Length, 0.5 );
@@ -408,10 +408,10 @@ namespace ImageReadCS
                     float xPix = RGB2GrayPix(Convolve(xWindow, pix, 1));
                     float yPix = RGB2GrayPix(Convolve(yWindow, pix, 1));
 
-					dest[ x, y ] = (float) Math.Sqrt( Math.Pow( xPix, 2 ) + Math.Pow( yPix, 2 ) );
+					magn[ x, y ] = (float) Math.Sqrt( Math.Pow( xPix, 2 ) + Math.Pow( yPix, 2 ) );
                     angles[x, y] = (float) Math.Atan2(yPix, xPix);
 				}
-			return dest;
+            return new List<GrayscaleFloatImage>(){magn, angles};
 		}
 
 		public static ColorFloatImage Gradient( ColorFloatImage image, float[] window, float divider )
