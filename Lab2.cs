@@ -159,9 +159,55 @@ namespace ImageReadCS
             var withoutNonMax = NonMaximumSuppression( magnitude, directions, tMax );
             return Hysteresis(withoutNonMax, tMin);
 		}
-		public static double Gabor( ColorFloatImage i1 )
+
+        public static float GaborPoint(int x, int y, List<double> param)
+        {
+            double _x = x * Math.Cos(param[2]) + y * Math.Sin(param[2]);
+            double _y = -x * Math.Sin(param[2]) + y * Math.Cos(param[2]);
+            double mul = 2 * param[0] * param[0];
+            double r1 = Math.Pow(_x, 2) + Math.Pow(_y * param[1], 2);
+            double r2 = Math.Cos(2 * Math.PI * _x / param[3] + param[4]);
+            return (float) (r2 * Math.Exp(-r1 / mul));
+        }
+
+        // 0 sigma, 1 gamma, 2 theta, 3 l, 4 psi
+
+        public static ConvolutionKernel CalculateKernel(List<double> param,
+                                  Func<int, int, List<double>, float> function) //todo check formula
+        {
+            int sm = (int)param[0];
+            int half = 3 * sm;
+            int size = 6 * sm + 1;
+
+            ConvolutionKernel kernel = new ConvolutionKernel();
+            kernel.Kernel = new float[size * size];
+            float sum = 0;
+
+            for (int j = 0; j < size; j++)
+                for (int i = 0; i < size; i++)
+                {
+                    float val = function(i - half, j - half, param);
+                    kernel.Kernel[j * size + i] = val;
+                    sum += val;
+                }
+
+            kernel.Sum = sum;
+            return kernel;
+        }
+
+        public static ColorFloatImage Gabor( ColorFloatImage image, double sigma,
+                                   double gamma, double theta, double lambda,
+                                   double psi)
 		{
-			return 0;
+            List<double> param = new List<double>();
+            param.Add(sigma);
+            param.Add(gamma);
+            param.Add(theta);
+            param.Add(lambda);
+            param.Add(psi);
+
+            ConvolutionKernel kernel = CalculateKernel(param, GaborPoint);
+            return Gradient(image, kernel.Kernel, 1);
 		}
 	}
 }
