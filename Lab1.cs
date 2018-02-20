@@ -53,7 +53,7 @@ namespace ImageReadCS
 			return image;
 		}
 
-		static double DegreeToRadian( double angle )
+		public static double DegreeToRadian( double angle )
 		{
 			return ( Math.PI / 180 ) * angle;
 		}
@@ -241,6 +241,17 @@ namespace ImageReadCS
 
 			return new ColorFloatPixel( blue, green, red, pix[ 0 ].a );
 		}
+
+
+        public static double ConvolveGray(float[] coef, List<float> pix)
+        {
+            float res = 0;
+
+            for (int i = 0; i < pix.Count; i++)
+                res += coef[i] * pix[i];
+
+            return res;
+        }
 
 
 		public static ColorFloatImage Sobel( ColorFloatImage image, string arg ) //todo rewrite
@@ -601,7 +612,7 @@ namespace ImageReadCS
 		}
 
 		public static ConvolutionKernel CalculateKernel( double sigma,
-																		Func<int, int, double, float> function ) //todo check formula
+									    Func<int, int, double, float> function ) //todo check formula
 		{
 			int sm = (int) sigma;
 			int half = 3 * sm;
@@ -624,7 +635,7 @@ namespace ImageReadCS
 		}
 
 		public static List<ConvolutionKernel> CalculateKernelXY( double sigma,
-															 Func<int, int, double, float> function ) //todo check formula
+										Func<int, int, double, float> function ) //todo check formula
 		{
 			int sm = (int) sigma;
 			int half = 3 * sm;

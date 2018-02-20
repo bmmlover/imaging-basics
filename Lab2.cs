@@ -177,7 +177,7 @@ namespace ImageReadCS
             return (float) (r2 * Math.Exp(-r1 / mul));
         }
 
-        // 0 sigma, 1 gamma, 2 theta, 3 l, 4 psi
+        // 0 sigma, 1 gamma, 2 theta, 3 lambda, 4 psi
 
         public static ConvolutionKernel CalculateKernel(List<double> param,
                                   Func<int, int, List<double>, float> function) //todo check formula
@@ -216,5 +216,53 @@ namespace ImageReadCS
             ConvolutionKernel kernel = CalculateKernel(param, GaborPoint);
             return GradientGrayscale( image, kernel.Kernel, 1);
 		}
+
+        public static GrayscaleFloatImage Vessels(ColorFloatImage image, double sigma)
+        {
+            double angle = 0;
+
+            List<ConvolutionKernel> gaborBank = new List<ConvolutionKernel>();
+
+            List<double> param = new List<double>();
+            param.Add(sigma);
+            param.Add(1);
+            param.Add(angle);
+            param.Add(6);
+            param.Add(0);
+
+            for (int i = 0; i < 4; i++)
+            {
+                gaborBank.Add(CalculateKernel(param, GaborPoint));
+                param[2] += Math.PI / 4;
+            }
+
+            GrayscaleFloatImage dest = new GrayscaleFloatImage(image.Width, image.Height);
+
+            int windowSide = (int)Math.Pow(gaborBank[0].Kernel.Length, 0.5);
+            int halfWindowSide = (windowSide - 1) / 2;
+
+            for (int y = 0; y < image.Height; y++)
+                for (int x = 0; x < image.Width; x++)
+                {
+                    List<int> i = NeighbourIndexes(x, image.Width - 1, halfWindowSide, FillMode.Reflection);
+                    List<int> j = NeighbourIndexes(y, image.Height - 1, halfWindowSide, FillMode.Reflection);
+                    List<float> pix = new List<float>();
+
+                    for (int k = 0; k < windowSide; k++)
+                        for (int n = 0; n < windowSide; n++)
+                            pix.Add(RGB2GrayPix(image[i[n], j[k]]));
+
+                    List<double> res = new List<double>();
+
+                    foreach (var kernel in gaborBank)
+                    {
+                        res.Add(ConvolveGray(kernel.Kernel, pix));
+                    }
+
+                    dest[x, y] = (float)res.Select(r => Math.Abs(r)).ToList().Max();
+                }
+            return dest;
+
+        }
 	}
 }
