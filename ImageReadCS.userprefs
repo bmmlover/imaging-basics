@@ -1,8 +1,9 @@
 ﻿<Properties StartupConfiguration="{E62DF5A6-F9C3-4C88-BEE1-38F0125662EB}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Lab2.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Formats/GrayscaleFloatImage.cs">
     <Files>
-      <File FileName="Lab1.cs" Line="389" Column="55" />
-      <File FileName="Lab2.cs" Line="57" Column="13" />
+      <File FileName="Lab1.cs" Line="377" Column="17" />
+      <File FileName="Lab2.cs" Line="110" Column="52" />
+      <File FileName="Formats/GrayscaleFloatImage.cs" Line="11" Column="16" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -10,8 +11,9 @@
           <Node name="ImageReadCS" expanded="True">
             <Node name="ImageReadCS" expanded="True">
               <Node name="References" expanded="True" />
-              <Node name="Formats" expanded="True" />
-              <Node name="Lab2.cs" selected="True" />
+              <Node name="Formats" expanded="True">
+                <Node name="GrayscaleFloatImage.cs" selected="True" />
+              </Node>
             </Node>
           </Node>
         </State>

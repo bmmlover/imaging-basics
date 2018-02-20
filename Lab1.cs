@@ -421,7 +421,7 @@ namespace ImageReadCS
                     float xPix = RGB2GrayPix(Convolve(xWindow, pix, 1));
                     float yPix = RGB2GrayPix(Convolve(yWindow, pix, 1));
 
-						  magn[ x, y ] = (float) Math.Sqrt( Math.Pow( xPix, 2 ) + Math.Pow( yPix, 2 ) );
+					magn[ x, y ] = (float) Math.Sqrt( Math.Pow( xPix, 2 ) + Math.Pow( yPix, 2 ) );
                     angles[x, y] = FitAngleInBin( Math.Abs(Math.Atan2(yPix, xPix)) );
 				}
             return new List<GrayscaleFloatImage>(){magn, angles};
