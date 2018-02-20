@@ -57,7 +57,7 @@ namespace ImageReadCS
 		{
 			SetDir();
 			ColorFloatImage image = ReadImage();
-			var nimage = Canny( image, 1);
+			var nimage = Canny( image, 2, (float)0.05, (float)0.02 );
 			SaveImage( nimage, "gauss" );
 		}
 	}

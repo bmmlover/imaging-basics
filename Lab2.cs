@@ -11,11 +11,11 @@ namespace ImageReadCS
 		public int Y { get; set; }
 	}
 
-    public class ImageEdges
-    {
-        public GrayscaleFloatImage Image;
-        public List<Point> Points;
-    }
+	public class ImageEdges
+	{
+		public GrayscaleFloatImage Image;
+		public List<Point> Points;
+	}
 
 	public static class Lab2
 	{
@@ -63,16 +63,19 @@ namespace ImageReadCS
 			return 0;
 		}
 
-        public static ImageEdges NonMaximumSuppression( GrayscaleFloatImage magnitude,
-                                                        GrayscaleFloatImage directions,
-                                                        float tMax )
+		public static ImageEdges NonMaximumSuppression( GrayscaleFloatImage magnitude,
+																		GrayscaleFloatImage directions,
+																		float tMax )
 		{
-            ImageEdges dest = new ImageEdges();
+			ImageEdges dest = new ImageEdges();
 			dest.Image = new GrayscaleFloatImage( magnitude.Width, magnitude.Height );
+			dest.Points = new List<Point>();
+			List<float> allvals = new List<float>();
 
 			for ( int y = 0; y < magnitude.Height; y++ )
 				for ( int x = 0; x < magnitude.Width; x++ )
 				{
+					allvals.Add( magnitude[ x, y ] );
 					int direction = (int) directions[ x, y ];
 
 					var pointList = new List<Point>();
@@ -94,7 +97,7 @@ namespace ImageReadCS
 
 						pointList = xList.Zip( yList, ( first, second ) => new Point() { X = first, Y = second } )
 											  .Where( p => p.X >= 0 && p.X <= magnitude.Width - 1 &&
-                                                     p.Y >= 0 && p.Y <= magnitude.Height - 1 )
+																	  p.Y >= 0 && p.Y <= magnitude.Height - 1 )
 											  .ToList();
 					}
 
@@ -104,60 +107,64 @@ namespace ImageReadCS
 						values.Add( magnitude[ point.X, point.Y ] );
 
 					if ( values.Max() > magnitude[ x, y ] )
-                        dest.Image[ x, y ] = 0;
-                    else
-                    {
-                        dest.Image[x, y] = magnitude[x, y];
-                        if (dest.Image[x, y] >= tMax)
-                            dest.Points.Add(new Point() { X = x, Y = y });
-                    }
+						dest.Image[ x, y ] = 0;
+					else
+					{
+						dest.Image[ x, y ] = magnitude[ x, y ];
+						if ( dest.Image[ x, y ] >= tMax )
+							dest.Points.Add( new Point() { X = x, Y = y } );
+					}
 
 				}
 
+			var a = allvals.Max();
+			var b = allvals.Min();
 			return dest;
 		}
 
-        public static GrayscaleFloatImage Hysteresis( ImageEdges edges, float tMin )
+		public static GrayscaleFloatImage Hysteresis( ImageEdges edges, float tMin )
 		{
-            var magnitude = edges.Image;
+			var magnitude = edges.Image;
 
 			GrayscaleFloatImage dest = new GrayscaleFloatImage( magnitude.Width, magnitude.Height );
 
-            float maxBrightness = 256;
+			float maxBrightness = 256;
 
-            var queue = new Queue<Point>(edges.Points);
+			var queue = new Queue<Point>( edges.Points );
 
-            while (queue.Count > 0)
-            {
-                var currentPoint = queue.Dequeue();
-                var x = currentPoint.X;
-                var y = currentPoint.Y;
+			while ( queue.Count > 0 )
+			{
+				var currentPoint = queue.Dequeue();
+				var x = currentPoint.X;
+				var y = currentPoint.Y;
 
-                dest[x, y] = maxBrightness;
-                var xList = Enumerable.Range(x - 1, 3).ToList();
-                var yList = Enumerable.Range(y - 1, 3).ToList();
+				dest[ x, y ] = maxBrightness;
+				var xList = Enumerable.Range( x - 1, 3 ).ToList();
+				var yList = Enumerable.Range( y - 1, 3 ).ToList();
 
-                var points = xList.SelectMany(i => yList.Select(j => new Point() { X = i, Y = j }))
-                     .Where(p => p.X >= 0 && p.X <= magnitude.Width - 1 &&
-                            p.Y >= 0 && p.Y <= magnitude.Height - 1).ToList();
+				var points = xList.SelectMany( i => yList.Select( j => new Point() { X = i, Y = j } ) )
+					  .Where( p => p.X >= 0 && p.X <= magnitude.Width - 1 &&
+								 p.Y >= 0 && p.Y <= magnitude.Height - 1 ).ToList();
 
-                foreach (var point in points)
-                    if (dest[point.X, point.Y] == 0 && magnitude[point.X, point.Y] >= tMin)
-                        queue.Enqueue(point);
+				foreach ( var point in points )
+					if ( dest[ point.X, point.Y ] == 0 && magnitude[ point.X, point.Y ] >= tMin )
+						queue.Enqueue( point );
 
-            }
+			}
 
 			return dest;
 		}
 
-        public static GrayscaleFloatImage Canny( ColorFloatImage image, float sigma, float tMax, float tMin )
+		public static GrayscaleFloatImage Canny( ColorFloatImage image, float sigma, float tMax, float tMin )
 		{
 			var kernels = CalculateKernelXY( sigma, GaussDerivativePoint );
 			var magnAndDir = MagnitudeAndDirections( image, kernels[ 0 ], kernels[ 1 ] );
 			var magnitude = magnAndDir[ 0 ];
 			var directions = magnAndDir[ 1 ];
-            var withoutNonMax = NonMaximumSuppression( magnitude, directions, tMax );
-            return Hysteresis(withoutNonMax, tMin);
+			tMax *= 256;
+			tMin *= 256;
+			var withoutNonMax = NonMaximumSuppression( magnitude, directions, tMax );
+			return Hysteresis( withoutNonMax, tMin );
 		}
 		public static double Gabor( ColorFloatImage i1 )
 		{
