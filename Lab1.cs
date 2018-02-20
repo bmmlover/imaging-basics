@@ -472,7 +472,7 @@ namespace ImageReadCS
 						for ( int n = 0; n < windowSide; n++ )
 							pix.Add( image[ i[ n ], j[ k ] ] );
 
-					dest[ x, y ] = RGB2GrayPix( Convolve( window, pix, divider ) );
+					dest[ x, y ] = RGB2GrayPix( Convolve( window, pix, divider ) );// + 128;
 				}
 
 			return dest;

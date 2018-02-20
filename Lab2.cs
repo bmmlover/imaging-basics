@@ -202,7 +202,7 @@ namespace ImageReadCS
             return kernel;
         }
 
-        public static ColorFloatImage Gabor( ColorFloatImage image, double sigma,
+        public static GrayscaleFloatImage Gabor( ColorFloatImage image, double sigma,
                                    double gamma, double theta, double lambda,
                                    double psi)
 		{
@@ -214,7 +214,7 @@ namespace ImageReadCS
             param.Add(psi);
 
             ConvolutionKernel kernel = CalculateKernel(param, GaborPoint);
-            return Gradient(image, kernel.Kernel, 1);
+            return GradientGrayscale( image, kernel.Kernel, 1);
 		}
 	}
 }

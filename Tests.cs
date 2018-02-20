@@ -12,7 +12,7 @@ namespace ImageReadCS
 	[TestFixture]
 	class Tests
 	{
-		public static string inputname = "mandarin";
+		public static string inputname = "parrots";
 		public void SetDir()
 		{
 			var dir = Path.GetDirectoryName( typeof( Program ).Assembly.Location );
@@ -44,7 +44,7 @@ namespace ImageReadCS
 
 			List<int> angles = new List<int>() { 0, 90, 180, 270, 45, 135, 225, 315, 360, 405, -45 };
 
-			foreach (var angle in angles )
+			foreach ( var angle in angles )
 			{
 				ColorFloatImage image = ReadImage();
 				image = RotateCW( image, angle );
@@ -57,8 +57,8 @@ namespace ImageReadCS
 		{
 			SetDir();
 			ColorFloatImage image = ReadImage();
-			var nimage = Canny( image, 2, (float)0.05, (float)0.02 );
-			SaveImage( nimage, "gauss" );
+			var nimage = Gabor( image, 3, 1, Math.PI / 6, 6, 0 );
+			SaveImage( nimage, "gabor" );
 		}
 	}
 }
