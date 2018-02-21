@@ -167,102 +167,115 @@ namespace ImageReadCS
 			return Hysteresis( withoutNonMax, tMin );
 		}
 
-        public static float GaborPoint(int x, int y, List<double> param)
-        {
-            double _x = x * Math.Cos(param[2]) + y * Math.Sin(param[2]);
-            double _y = -x * Math.Sin(param[2]) + y * Math.Cos(param[2]);
-            double mul = 2 * param[0] * param[0];
-            double r1 = Math.Pow(_x, 2) + Math.Pow(_y * param[1], 2);
-            double r2 = Math.Cos(2 * Math.PI * _x / param[3] + param[4]);
-            return (float) (r2 * Math.Exp(-r1 / mul));
-        }
-
-        // 0 sigma, 1 gamma, 2 theta, 3 lambda, 4 psi
-
-        public static ConvolutionKernel CalculateKernel(List<double> param,
-                                  Func<int, int, List<double>, float> function) //todo check formula
-        {
-            int sm = (int)param[0];
-            int half = 3 * sm;
-            int size = 6 * sm + 1;
-
-            ConvolutionKernel kernel = new ConvolutionKernel();
-            kernel.Kernel = new float[size * size];
-            float sum = 0;
-
-            for (int j = 0; j < size; j++)
-                for (int i = 0; i < size; i++)
-                {
-                    float val = function(i - half, j - half, param);
-                    kernel.Kernel[j * size + i] = val;
-                    sum += val;
-                }
-
-            kernel.Sum = sum;
-            return kernel;
-        }
-
-        public static GrayscaleFloatImage Gabor( ColorFloatImage image, double sigma,
-                                   double gamma, double theta, double lambda,
-                                   double psi)
+		public static float GaborPoint( int x, int y, List<double> param )
 		{
-            List<double> param = new List<double>();
-            param.Add(sigma);
-            param.Add(gamma);
-            param.Add(theta);
-            param.Add(lambda);
-            param.Add(psi);
-
-            ConvolutionKernel kernel = CalculateKernel(param, GaborPoint);
-            return GradientGrayscale( image, kernel.Kernel, 1);
+			double _x = x * Math.Cos( param[ 2 ] ) + y * Math.Sin( param[ 2 ] );
+			double _y = -x * Math.Sin( param[ 2 ] ) + y * Math.Cos( param[ 2 ] );
+			double mul = 2 * param[ 0 ] * param[ 0 ];
+			double r1 = Math.Pow( _x, 2 ) + Math.Pow( _y * param[ 1 ], 2 );
+			double r2 = Math.Cos( 2 * Math.PI * _x / param[ 3 ] + param[ 4 ] );
+			return (float) ( r2 * Math.Exp( -r1 / mul ) );
 		}
 
-        public static GrayscaleFloatImage Vessels(ColorFloatImage image, double sigma)
-        {
-            double angle = 0;
+		// 0 sigma, 1 gamma, 2 theta, 3 lambda, 4 psi
 
-            List<ConvolutionKernel> gaborBank = new List<ConvolutionKernel>();
+		public static ConvolutionKernel CalculateKernel( List<double> param,
+										  Func<int, int, List<double>, float> function ) //todo check formula
+		{
+			int sm = (int) param[ 0 ];
+			int half = 3 * sm;
+			int size = 6 * sm + 1;
 
-            List<double> param = new List<double>();
-            param.Add(sigma);
-            param.Add(1);
-            param.Add(angle);
-            param.Add(6);
-            param.Add(0);
+			ConvolutionKernel kernel = new ConvolutionKernel();
+			kernel.Kernel = new float[ size * size ];
+			float sum = 0;
 
-            for (int i = 0; i < 4; i++)
-            {
-                gaborBank.Add(CalculateKernel(param, GaborPoint));
-                param[2] += Math.PI / 4;
-            }
+			for ( int j = 0; j < size; j++ )
+				for ( int i = 0; i < size; i++ )
+				{
+					float val = function( i - half, j - half, param );
+					kernel.Kernel[ j * size + i ] = val;
+					sum += val;
+				}
 
-            GrayscaleFloatImage dest = new GrayscaleFloatImage(image.Width, image.Height);
+			kernel.Sum = sum;
+			return kernel;
+		}
 
-            int windowSide = (int)Math.Pow(gaborBank[0].Kernel.Length, 0.5);
-            int halfWindowSide = (windowSide - 1) / 2;
+		public static GrayscaleFloatImage Gabor( ColorFloatImage image, double sigma,
+											double gamma, double theta, double lambda,
+											double psi )
+		{
+			List<double> param = new List<double>();
+			param.Add( sigma );
+			param.Add( gamma );
+			param.Add( theta );
+			param.Add( lambda );
+			param.Add( psi );
 
-            for (int y = 0; y < image.Height; y++)
-                for (int x = 0; x < image.Width; x++)
-                {
-                    List<int> i = NeighbourIndexes(x, image.Width - 1, halfWindowSide, FillMode.Reflection);
-                    List<int> j = NeighbourIndexes(y, image.Height - 1, halfWindowSide, FillMode.Reflection);
-                    List<float> pix = new List<float>();
+			ConvolutionKernel kernel = CalculateKernel( param, GaborPoint );
+			return GradientGrayscale( image, kernel.Kernel, 1 );
+		}
 
-                    for (int k = 0; k < windowSide; k++)
-                        for (int n = 0; n < windowSide; n++)
-                            pix.Add(RGB2GrayPix(image[i[n], j[k]]));
+		public static GrayscaleFloatImage Vessels( ColorFloatImage image, double sigma )
+		{
+			double angle = 0;
 
-                    List<double> res = new List<double>();
+			List<ConvolutionKernel> gaborBank = new List<ConvolutionKernel>();
 
-                    foreach (var kernel in gaborBank)
-                    {
-                        res.Add(ConvolveGray(kernel.Kernel, pix));
-                    }
+			List<double> param = new List<double>();
+			param.Add( sigma );
+			param.Add( 1 );
+			param.Add( angle );
+			param.Add( 6 );
+			param.Add( 0 );
 
-                    dest[x, y] = (float)res.Select(r => Math.Abs(r)).ToList().Max();
-                }
-            return dest;
+			List<double> lambdas = new List<double>() { 0.5, 1, 1.5 };
 
-        }
+			for ( int i = 0; i < 8; i++ )
+			{
+				foreach ( var lambda in lambdas )
+				{
+					param[ 3 ] = lambda;
+					gaborBank.Add( CalculateKernel( param, GaborPoint ) );
+				}
+				param[ 2 ] += Math.PI / 8;
+			}
+
+			GrayscaleFloatImage dest = new GrayscaleFloatImage( image.Width, image.Height );
+
+			int windowSide = (int) Math.Pow( gaborBank[ 0 ].Kernel.Length, 0.5 );
+			int halfWindowSide = ( windowSide - 1 ) / 2;
+
+			for ( int y = 0; y < image.Height; y++ )
+				for ( int x = 0; x < image.Width; x++ )
+				{
+					List<int> i = NeighbourIndexes( x, image.Width - 1, halfWindowSide, FillMode.Reflection );
+					List<int> j = NeighbourIndexes( y, image.Height - 1, halfWindowSide, FillMode.Reflection );
+					List<float> pix = new List<float>();
+
+					for ( int k = 0; k < windowSide; k++ )
+						for ( int n = 0; n < windowSide; n++ )
+							pix.Add( RGB2GrayPix( image[ i[ n ], j[ k ] ] ) );
+
+					List<double> res = new List<double>();
+
+					foreach ( var kernel in gaborBank )
+					{
+						res.Add( ConvolveGray( kernel.Kernel, pix ) );
+					}
+
+
+					var resList = res.Where( r => r < 0 ).Select( r => Math.Abs( r ) ).ToList();
+
+					if ( resList.Count > 0 )
+						dest[ x, y ] = (float) resList.Max();
+					else
+						dest[ x, y ] = 0;
+
+				}
+			return dest;
+
+		}
 	}
 }

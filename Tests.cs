@@ -12,7 +12,7 @@ namespace ImageReadCS
 	[TestFixture]
 	class Tests
 	{
-		public static string inputname = "parrots";
+		public static string inputname = "retina_src";
 		public void SetDir()
 		{
 			var dir = Path.GetDirectoryName( typeof( Program ).Assembly.Location );
@@ -21,7 +21,7 @@ namespace ImageReadCS
 
 		public ColorFloatImage ReadImage()
 		{
-			string inputFileName = $"input//{inputname}.bmp";
+			string inputFileName = $"input//{inputname}.png";
 			if ( !File.Exists( inputFileName ) )
 			{
 				Console.WriteLine( "File doesn't exist" );
@@ -57,7 +57,7 @@ namespace ImageReadCS
 		{
 			SetDir();
 			ColorFloatImage image = ReadImage();
-			var nimage = Gabor( image, 3, 1, Math.PI / 6, 6, 0 );
+			var nimage = Vessels(image, 2);
 			SaveImage( nimage, "gabor" );
 		}
 	}
