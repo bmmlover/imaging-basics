@@ -40,27 +40,123 @@ namespace ImageReadCS
 
 		public static double SSIM( ColorFloatImage i1, ColorFloatImage i2 )
 		{
+            if (i1.Width != i2.Width || i1.Height != i2.Height)
+                return -10;
+            
 			double K1 = 0.01, K2 = 0.03;
 			int L = 255;
-
 			var C1 = Math.Pow( K1 * L, 2 );
 			var C2 = Math.Pow( K2 * L, 2 );
-			var mu1 = 0;//signal.fftconvolve(window, img1, mode = 'valid');
-			var mu2 = 0;//signal.fftconvolve(window, img2, mode = 'valid');
-			var mu1_sq = mu1 * mu1;
-			var mu2_sq = mu2 * mu2;
-			var mu1_mu2 = mu1 * mu2;
-			var sigma1_sq = 0;//signal.fftconvolve(window, img1 * img1, mode = 'valid') - mu1_sq;
-			var sigma2_sq = 0;//signal.fftconvolve(window, img2 * img2, mode = 'valid') - mu2_sq;
-			var sigma12 = 0;//signal.fftconvolve(window, img1 * img2, mode = 'valid') - mu1_mu2;
 
-			return ( ( 2 * mu1_mu2 + C1 ) * ( 2 * sigma12 + C2 ) ) / ( ( mu1_sq + mu2_sq + C1 ) *
-																				 ( sigma1_sq + sigma2_sq + C2 ) );
+            double mu1 = 0;
+            double mu2 = 0;
+            double sigma1_sq = 0;
+            double sigma2_sq = 0;
+            double sigma12 = 0;
+            double wh = i1.Width * i1.Height;
+
+            for (int y = 0; y < i1.Height; y++)
+                for (int x = 0; x < i1.Width; x++)
+                {
+                    mu1 += RGB2GrayPix(i1[x, y]);
+                    mu2 += RGB2GrayPix(i2[x, y]);
+                }
+
+            mu1 = mu1 / wh;
+            mu2 = mu2 / wh;
+
+            for (int y = 0; y < i1.Height; y++)
+                for (int x = 0; x < i1.Width; x++)
+                {
+                    var d1 = RGB2GrayPix(i1[x, y]) - mu1;
+                    var d2 = RGB2GrayPix(i2[x, y]) - mu2;
+                    sigma1_sq += Math.Pow(d1, 2);
+                    sigma2_sq += Math.Pow(d2, 2);
+                    sigma12 += d1 * d2;
+                }
+
+            sigma1_sq = sigma1_sq / (wh - 1);
+            sigma2_sq = sigma2_sq / (wh - 1);
+            sigma12 = sigma12 / (wh - 1);
+
+            return ( ( 2 * mu1 * mu2 + C1 ) * ( 2 * sigma12 + C2 ) ) /
+                ( ( mu1 * mu1 + mu2 * mu2 + C1 ) * ( sigma1_sq + sigma2_sq + C2 ) );
 
 		}
+
+        public static double SSIM(List<float> i1, List<float> i2)
+        {
+            if (i1.Count != i2.Count)
+                return -10;
+
+            double K1 = 0.01, K2 = 0.03;
+            int L = 255;
+            var C1 = Math.Pow(K1 * L, 2);
+            var C2 = Math.Pow(K2 * L, 2);
+
+            double mu1 = 0;
+            double mu2 = 0;
+            double sigma1_sq = 0;
+            double sigma2_sq = 0;
+            double sigma12 = 0;
+            double wh = i1.Count;
+
+            for (int x = 0; x < i1.Count; x++)
+            {
+                mu1 += i1[x];
+                mu2 += i2[x];
+            }
+
+            mu1 = mu1 / wh;
+            mu2 = mu2 / wh;
+
+            for (int x = 0; x < i1.Count; x++)
+            {
+                var d1 = i1[x] - mu1;
+                var d2 = i2[x] - mu2;
+                sigma1_sq += Math.Pow(d1, 2);
+                sigma2_sq += Math.Pow(d2, 2);
+                sigma12 += d1 * d2;
+            }
+
+            sigma1_sq = sigma1_sq / (wh - 1);
+            sigma2_sq = sigma2_sq / (wh - 1);
+            sigma12 = sigma12 / (wh - 1);
+
+            return ((2 * mu1 * mu2 + C1) * (2 * sigma12 + C2)) /
+                ((mu1 * mu1 + mu2 * mu2 + C1) * (sigma1_sq + sigma2_sq + C2));
+
+        }
+
 		public static double MSSIM( ColorFloatImage i1, ColorFloatImage i2 )
 		{
-			return 0;
+            List<double> SSIMvalues = new List<double>();
+            int step = 4;
+
+            for (int y = 4; y < i1.Height - 4; y = y + step)
+                for (int x = 4; x < i1.Width - 4; x = x + step)
+                {
+                    var xList = Enumerable.Range(x - 4, 8).ToList();
+                    var yList = Enumerable.Range(y - 4, 8).ToList();
+
+                    var points = xList
+                        .SelectMany(i => yList.Select(j => new Point() { X = i, Y = j }))
+                        .ToList();
+
+                    List<float> i1Pix = new List<float>();
+                    List<float> i2Pix = new List<float>();
+
+                    foreach (var point in points)
+                    {
+                        i1Pix.Add(RGB2GrayPix(i1[point.X, point.Y]));
+                        i2Pix.Add(RGB2GrayPix(i2[point.X, point.Y]));
+                    }
+                    
+                    SSIMvalues.Add(SSIM(i1Pix, i2Pix));
+                }
+
+            return SSIMvalues.Sum() / SSIMvalues.Count;
+
 		}
 
 		public static ImageEdges NonMaximumSuppression( GrayscaleFloatImage magnitude,
