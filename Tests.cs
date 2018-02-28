@@ -12,7 +12,7 @@ namespace ImageReadCS
 	[TestFixture]
 	class Tests
 	{
-		public static string inputname = "retina_src";
+		public static string inputname = "parrot";
 		public void SetDir()
 		{
 			var dir = Path.GetDirectoryName( typeof( Program ).Assembly.Location );
@@ -21,7 +21,7 @@ namespace ImageReadCS
 
 		public ColorFloatImage ReadImage()
 		{
-			string inputFileName = $"input//{inputname}.png";
+			string inputFileName = $"input//{inputname}.bmp";
 			if ( !File.Exists( inputFileName ) )
 			{
 				Console.WriteLine( "File doesn't exist" );
@@ -30,7 +30,7 @@ namespace ImageReadCS
 			return ImageIO.FileToColorFloatImage( inputFileName );
 		}
 
-		public void SaveImage( GrayscaleFloatImage image, string filename )
+		public void SaveImage( ColorFloatImage image, string filename )
 		{
 			List<string> outputFileName = new List<string>() { $"{inputname}_", "", ".bmp" };
 			outputFileName[ 1 ] = filename;
@@ -57,8 +57,8 @@ namespace ImageReadCS
 		{
 			SetDir();
 			ColorFloatImage image = ReadImage();
-			var nimage = Vessels(image, 2);
-			SaveImage( nimage, "gabor" );
+			var nimage = Bilaterial(image, 5, 20);
+			SaveImage( nimage, "bilateral" );
 		}
 	}
 }
