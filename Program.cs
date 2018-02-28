@@ -16,6 +16,7 @@ namespace ImageReadCS
 			"median",
 			"gauss",
 			"gradient",
+			"bilateral"
 		};
 
 		static List<string> _lab2 = new List<string>()
@@ -26,7 +27,7 @@ namespace ImageReadCS
 			"mssim",
 			"canny",
 			"gabor",
-			"vessels"
+			"vessels",
 		};
 
 		static ColorFloatImage ReadImage( string filename )
@@ -40,6 +41,7 @@ namespace ImageReadCS
 		static float GetNumericArg( string text )
 		{
 			string str = text.Trim( new char[] { '(', ')' } );
+			str = str.Replace( '.', ',' );
 			float num = 0;
 			float.TryParse( str, out num );
 			return num;
@@ -146,6 +148,14 @@ namespace ImageReadCS
 						GrayscaleFloatImage newOutputImage = GaussMagnitude( inputImage, sigma );
 						outputFileName = String.Concat( outputName );
 						ImageIO.ImageToFile( newOutputImage, outputFileName );
+						break;
+
+					case "bilateral":
+						outputName[ 1 ] = "bilateral";
+						float sigma_d = GetNumericArg( args[ 2 ] );
+						float sigma_r = GetNumericArg( args[ 3 ] );
+						inputImage = ReadImage( args[ 4 ] );
+						outputImage = Bilateral( inputImage, sigma_d, sigma_r );
 						break;
 				}
 

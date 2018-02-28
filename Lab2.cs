@@ -306,7 +306,7 @@ namespace ImageReadCS
 			List<double> param = new List<double>();
 			param.Add( sigma );
 			param.Add( gamma );
-			param.Add( theta );
+			param.Add( DegreeToRadian( theta ) );
 			param.Add( lambda );
 			param.Add( psi );
 
@@ -355,18 +355,18 @@ namespace ImageReadCS
 						for ( int n = 0; n < windowSide; n++ )
 							pix.Add( RGB2GrayPix( image[ i[ n ], j[ k ] ] ) );
 
-					List<double> res = new List<double>();
+					List<float> res = new List<float>();
 
 					foreach ( var kernel in gaborBank )
 					{
-						res.Add( ConvolveGray( kernel.Kernel, pix ) );
+						res.Add( ConvolveGray( kernel.Kernel, pix, 1 ) );
 					}
 
 
 					var resList = res.Where( r => r < 0 ).Select( r => Math.Abs( r ) ).ToList();
 
 					if ( resList.Count > 0 )
-						dest[ x, y ] = (float) resList.Max();
+						dest[ x, y ] = resList.Max();
 					else
 						dest[ x, y ] = 0;
 
@@ -385,7 +385,7 @@ namespace ImageReadCS
 			return Math.Pow( x.r - y.r, 2 ) + Math.Pow( x.g - y.g, 2 ) + Math.Pow( x.b - y.b, 2 );
 		}
 
-		public static float BilaterialPoint( int x, int y, double sigma_d, ColorFloatPixel Ix, ColorFloatPixel Iy, double sigma_r )
+		public static float BilateralPoint( int x, int y, double sigma_d, ColorFloatPixel Ix, ColorFloatPixel Iy, double sigma_r )
 		{
 			double mul_d = 2 * sigma_d * sigma_d;
 			double mul_r = 2 * sigma_r * sigma_r;
@@ -394,7 +394,7 @@ namespace ImageReadCS
 			return (float) a;
 		}
 
-		public static ColorFloatImage Bilaterial( ColorFloatImage image, double sigma_d, double sigma_r )
+		public static ColorFloatImage Bilateral( ColorFloatImage image, double sigma_d, double sigma_r )
 		{
 			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
 
@@ -432,7 +432,7 @@ namespace ImageReadCS
 								//dist = (float) NormL2( RGB2GrayPix( image[ x, y ] ), RGB2GrayPix( image[ i[ n ], j[ k ] ] ) );
 								intensityDistances.Add( hashCode, dist );
 							}
-							newWindow.Add( BilaterialPoint( x - i[ n ], y - j[ k ], sigma_d, image[ x, y ], image[ i[ n ], j[ k ] ], sigma_r ) );
+							newWindow.Add( BilateralPoint( x - i[ n ], y - j[ k ], sigma_d, image[ x, y ], image[ i[ n ], j[ k ] ], sigma_r ) );
 							//newWindow[ pix.Count - 1 ] = (float) ( 1 / Math.PI * mul_d *Math.Exp( window[ pix.Count - 1 ] ));// - dist * mul_r);
 
 						}

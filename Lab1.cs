@@ -166,12 +166,12 @@ namespace ImageReadCS
 		}
 
 
-        public static double ConvolveGray(float[] coef, List<float> pix)
+        public static float ConvolveGray(float[] coef, List<float> pix, float divider)
         {
             float res = 0;
 
             for (int i = 0; i < pix.Count; i++)
-                res += coef[i] * pix[i];
+                res += coef[i] * pix[i] / divider;
 
             return res;
         }
@@ -349,14 +349,14 @@ namespace ImageReadCS
 				{
 					List<int> i = NeighbourIndexes( x, image.Width - 1, halfWindowSide, FillMode.Reflection );
 					List<int> j = NeighbourIndexes( y, image.Height - 1, halfWindowSide, FillMode.Reflection );
-					List<ColorFloatPixel> pix = new List<ColorFloatPixel>();
+					List<float> pix = new List<float>();
 
 					for ( int k = 0; k < windowSide; k++ )
 						for ( int n = 0; n < windowSide; n++ )
-							pix.Add( image[ i[ n ], j[ k ] ] );
+							pix.Add( RGB2GrayPix( image[ i[ n ], j[ k ] ] ) );
 
-					float xPix = RGB2GrayPix( Convolve( xWindow, pix, xKernel.Sum ) );
-					float yPix = RGB2GrayPix( Convolve( yWindow, pix, yKernel.Sum ) );
+					float xPix = ConvolveGray( xWindow, pix, xKernel.Sum );
+					float yPix = ConvolveGray( yWindow, pix, yKernel.Sum );
 
 					magn[ x, y ] = (float) Math.Sqrt( Math.Pow( xPix, 2 ) + Math.Pow( yPix, 2 ) );
 					angles[ x, y ] = FitAngleInBin( Math.Abs( Math.Atan2( yPix, xPix ) ) );

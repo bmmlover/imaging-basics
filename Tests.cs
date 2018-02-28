@@ -12,7 +12,7 @@ namespace ImageReadCS
 	[TestFixture]
 	class Tests
 	{
-		public static string inputname = "parrot";
+		public static string inputname = "lena";
 		public void SetDir()
 		{
 			var dir = Path.GetDirectoryName( typeof( Program ).Assembly.Location );
@@ -57,7 +57,7 @@ namespace ImageReadCS
 		{
 			SetDir();
 			ColorFloatImage image = ReadImage();
-			var nimage = Bilaterial(image, 5, 20);
+			var nimage = Bilateral(image, 5, 20);
 			SaveImage( nimage, "bilateral" );
 		}
 	}
