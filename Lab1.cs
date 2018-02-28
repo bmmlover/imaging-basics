@@ -151,84 +151,7 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		public static ColorFloatImage Prewitt( ColorFloatImage image, string arg ) //todo rewrite
-		{
-			int axes = 0;
-			if ( arg == "y" )
-				axes = 1;
-			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
-			int a12 = 0, a13 = 1, a21 = -1, a22 = 0, a23 = 1, a31 = -1, a32 = 0;
-			int a11 = -1;
-			int a33 = 1;
-			if ( axes == 0 ) // Gx
-			{
-				a12 = 0;
-				a13 = 1;
-				a21 = -1;
-				a22 = 0;
-				a23 = 1;
-				a31 = -1;
-				a32 = 0;
-			}
-			else if ( axes == 1 ) // Gy
-			{
-				a12 = -1;
-				a13 = -1;
-				a21 = 0;
-				a22 = 0;
-				a23 = 0;
-				a31 = 1;
-				a32 = 1;
-			}
-
-			int border_x0 = 0, border_y0 = 0, border_xn = 0, border_yn = 0;
-
-			for ( int y = 0; y < image.Height; y++ )
-				for ( int x = 0; x < image.Width; x++ )
-				{
-					if ( x - 1 < 0 )
-						border_x0 = 1;
-					if ( y - 1 < 0 )
-						border_y0 = 1;
-					if ( x + 1 > image.Width - 1 )
-						border_xn = 1;
-					if ( y + 1 > image.Height - 1 )
-						border_yn = 1;
-
-					ColorFloatPixel p11 = image[ x - 1 + border_x0, y - 1 + border_y0 ];
-					ColorFloatPixel p12 = image[ x, y - 1 + border_y0 ];
-					ColorFloatPixel p13 = image[ x + 1 - border_xn, y - 1 + border_y0 ];
-					ColorFloatPixel p21 = image[ x - 1 + border_x0, y ];
-					ColorFloatPixel p22 = image[ x, y ];
-					ColorFloatPixel p23 = image[ x + 1 - border_xn, y ];
-					ColorFloatPixel p31 = image[ x - 1 + border_x0, y + 1 - border_yn ];
-					ColorFloatPixel p32 = image[ x, y + 1 - border_yn ];
-					ColorFloatPixel p33 = image[ x + 1 - border_xn, y + 1 - border_yn ];
-
-					border_x0 = 0;
-					border_y0 = 0;
-					border_xn = 0;
-					border_yn = 0;
-
-					float blue =
-						  a11 * p11.b + a12 * p12.b + a13 * p13.b +
-						  a21 * p21.b + a22 * p22.b + a23 * p23.b +
-						  a31 * p31.b + a32 * p32.b + a33 * p33.b;
-					float green =
-						  a11 * p11.g + a12 * p12.g + a13 * p13.g +
-						  a21 * p21.g + a22 * p22.g + a23 * p23.g +
-						  a31 * p31.g + a32 * p32.g + a33 * p33.g;
-					float red =
-						  a11 * p11.r + a12 * p12.r + a13 * p13.r +
-						  a21 * p21.r + a22 * p22.r + a23 * p23.r +
-						  a31 * p31.r + a32 * p32.r + a33 * p33.r;
-
-					dest[ x, y ] = new ColorFloatPixel( blue + 128, green + 128, red + 128, image[ x, y ].a );
-				}
-			return dest;
-		}
-
-		static ColorFloatPixel Convolve( float[] coef, List<ColorFloatPixel> pix, float divider )
+		public static ColorFloatPixel Convolve( float[] coef, List<ColorFloatPixel> pix, float divider )
 		{
 			float red = 0, green = 0, blue = 0;
 
@@ -489,60 +412,6 @@ namespace ImageReadCS
 			return dest;
 		}
 
-		public static ColorFloatImage Roberts( ColorFloatImage image, int diag ) //todo rewrite
-		{
-			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
-			int a11 = 1, a12 = 0, a21 = 0, a22 = -1;
-			if ( diag == 1 ) // main
-			{
-				a11 = 1;
-				a12 = 0;
-				a21 = 0;
-				a22 = -1;
-			}
-			else if ( diag == 2 ) // other
-			{
-				a11 = 0;
-				a12 = 1;
-				a21 = -1;
-				a22 = 0;
-			}
-
-			int border_xn = 0, border_yn = 0;
-
-			for ( int y = 0; y < image.Height; y++ )
-				for ( int x = 0; x < image.Width; x++ )
-				{
-
-					if ( x + 1 > image.Width - 1 )
-						border_xn = 1;
-					if ( y + 1 > image.Height - 1 )
-						border_yn = 1;
-
-					ColorFloatPixel p11 = image[ x, y ];
-					ColorFloatPixel p12 = image[ x + 1 - border_xn, y ];
-					ColorFloatPixel p21 = image[ x, y + 1 - border_yn ];
-					ColorFloatPixel p22 = image[ x + 1 - border_xn, y + 1 - border_yn ];
-
-
-					border_xn = 0;
-					border_yn = 0;
-
-					float blue =
-						  a11 * p11.b + a12 * p12.b +
-						  a21 * p21.b + a22 * p22.b;
-					float green =
-						  a11 * p11.g + a12 * p12.g +
-						  a21 * p21.g + a22 * p22.g;
-					float red =
-						  a11 * p11.r + a12 * p12.r +
-						  a21 * p21.r + a22 * p22.r;
-
-					dest[ x, y ] = new ColorFloatPixel( blue + 128, green + 128, red + 128, image[ x, y ].a );
-				}
-			return dest;
-		}
-
 		public static ColorFloatImage Median( ColorFloatImage image, int rad ) //todo rewrite
 		{
 			ColorFloatImage dest = new ColorFloatImage( image.Width, image.Height );
@@ -602,6 +471,11 @@ namespace ImageReadCS
 			double r = Math.Pow( x, 2 ) + Math.Pow( y, 2 );
 			return (float) ( piMul * Math.Exp( -r / mul ) );
 		}
+
+        public static float GaussPartBilaterialPoint(int x, int y, double sigma)
+        {
+            return (float)((Math.Pow(x, 2) + Math.Pow(y, 2)) / (2 * sigma * sigma));
+        }
 
 		public static float GaussDerivativePoint( int x, int y, double sigma )
 		{

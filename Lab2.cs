@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using static ImageReadCS.Lab1;
 
@@ -275,7 +276,7 @@ namespace ImageReadCS
 
 		// 0 sigma, 1 gamma, 2 theta, 3 lambda, 4 psi
 
-		public static ConvolutionKernel CalculateKernel( List<double> param,
+		public static ConvolutionKernel CalculateGaborKernel( List<double> param,
 										  Func<int, int, List<double>, float> function ) //todo check formula
 		{
 			int sm = (int) param[ 0 ];
@@ -309,7 +310,7 @@ namespace ImageReadCS
 			param.Add( lambda );
 			param.Add( psi );
 
-			ConvolutionKernel kernel = CalculateKernel( param, GaborPoint );
+            ConvolutionKernel kernel = CalculateGaborKernel( param, GaborPoint );
 			return GradientGrayscale( image, kernel.Kernel, 1 );
 		}
 
@@ -333,7 +334,7 @@ namespace ImageReadCS
 				foreach ( var lambda in lambdas )
 				{
 					param[ 3 ] = lambda;
-					gaborBank.Add( CalculateKernel( param, GaborPoint ) );
+                    gaborBank.Add( CalculateGaborKernel( param, GaborPoint ) );
 				}
 				param[ 2 ] += Math.PI / 8;
 			}
@@ -373,5 +374,65 @@ namespace ImageReadCS
 			return dest;
 
 		}
+
+        public static double NormL2(float x, float y)
+        {
+            return Math.Pow(x, 2) + Math.Pow(y, 2);
+        }
+
+        public static float BilaterialPoint(int x, int y, double sigma_d, float Ix, float Iy, double sigma_r)
+        {
+            double mul_d = 1 / (2 * sigma_d * sigma_d);
+            double mul_r = 1 / (2 * sigma_r * sigma_r);
+            return (float)Math.Exp(-NormL2(x, y) * mul_d + -NormL2(Ix, Iy) * mul_r);
+        }
+
+        public static ColorFloatImage Bilaterial(ColorFloatImage image, double sigma_d, double sigma_r)
+        {
+            ColorFloatImage dest = new ColorFloatImage(image.Width, image.Height);
+
+            ConvolutionKernel gaussPartKernel = CalculateKernel(sigma_d, GaussPartBilaterialPoint);
+            var window = gaussPartKernel.Kernel;
+            double mul_r = 1 / (2 * sigma_r * sigma_r);
+            Dictionary<string, float> intensityDistances = new Dictionary<string, float>();
+
+            int windowSide = (int)Math.Pow(window.Length, 0.5);
+            int halfWindowSide = (windowSide - 1) / 2;
+
+            for (int y = 0; y < image.Height; y++)
+                for (int x = 0; x < image.Width; x++)
+                {
+                    List<int> i = NeighbourIndexes(x, image.Width - 1, halfWindowSide, FillMode.Reflection);
+                    List<int> j = NeighbourIndexes(y, image.Height - 1, halfWindowSide, FillMode.Reflection);
+                    List<ColorFloatPixel> pix = new List<ColorFloatPixel>();
+
+                    var currentPixel = image[x, y];
+                    var newWindow = (float[])window.Clone();
+
+                    for (int k = 0; k < windowSide; k++)
+                        for (int n = 0; n < windowSide; n++)
+                        {
+                            pix.Add(image[i[n], j[k]]);
+                            var coords = new int[] { x, y, i[n], j[k] };
+                            Array.Sort(coords);
+                            string hashCode = String.Format("{0:X}", String.Concat(coords
+                                                       .Select(val => val.ToString())).GetHashCode());
+                            float dist = 0;
+                            if (intensityDistances.ContainsKey(hashCode))
+                                dist = intensityDistances[hashCode];
+                            else
+                            {
+                                dist = (float)NormL2(RGB2GrayPix(image[x, y]), RGB2GrayPix(image[i[n], j[k]]));
+                                intensityDistances.Add(hashCode, dist);
+                            }
+                            
+                            newWindow[pix.Count - 1] = (float)Math.Exp(window[pix.Count - 1] - dist * mul_r);
+                        }
+                            
+                        dest[x, y] = Convolve(newWindow, pix, 1);
+                }
+
+            return dest;
+        }
 	}
 }
